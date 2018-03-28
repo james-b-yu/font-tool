@@ -1,0 +1,18 @@
+mkdir bin
+mkdir bin_vc_x64
+mkdir bin_vc_x86
+source devenv64
+compile
+mv ./bin/main.exe ./bin_vc_x64/font-tool-en.exe
+compile "/DLANG=1"
+mv ./bin/main.exe ./bin_vc_x64/font-tool-de.exe
+source devenv32
+compile
+mv ./bin/main.exe ./bin_vc_x86/font-tool-en.exe
+compile "/DLANG=1"
+mv ./bin/main.exe ./bin_vc_x86/font-tool-de.exe
+
+cygstart -- /bin/bash -c \"upx --best --ultra-brute --overlay=skip ./bin_vc_x64/font-tool-en.exe\"
+cygstart -- /bin/bash -c \"upx --best --ultra-brute --overlay=skip ./bin_vc_x64/font-tool-de.exe\"
+cygstart -- /bin/bash -c \"upx --best --ultra-brute --overlay=skip ./bin_vc_x86/font-tool-en.exe\"
+cygstart -- /bin/bash -c \"upx --best --ultra-brute --overlay=skip ./bin_vc_x86/font-tool-de.exe\"
