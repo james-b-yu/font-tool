@@ -1,10 +1,12 @@
 #pragma once
 
 #include "frame.h"
+#include "curlhelp.cpp"
 #include "icon.xpm"
 #include "locale.cpp"
 #include "trevtdata.h"
 #include <algorithm>
+#include <curl/curl.h>
 #include <set>
 #include <thread>
 #include <wx/aboutdlg.h>
@@ -945,9 +947,33 @@ void Frame::destroyOnceDone(wxCommandEvent &evt) {
 }
 
 void Frame::updateApplication() {
+	wxPuts(SERVER_FILE_NAME);
+
+	updateStatus(CHECKING_UPDATES "...");
 	disableControls();
-	updateStatus("Simulate update");
-	std::this_thread::sleep_for(std::chrono::seconds(5));
-	wxPuts("from frame.cpp");
+
+	// get latest version number
+	std::string str(CURLHelper::GetUrlStringContents(
+	    "https://raw.githubusercontent.com/fiercedeity-productions/font-tool/master/current-version"));
+
+	if (str.compare(INTERNAL_VERSION) != 0) {
+#if LANG == 0
+		updateStatus(DOWNLOADING_VERSION " " + str);
+#elif LANG == 1
+		updateStatus(VERSION_STR " " + str + " " DOWNLOADING);
+#endif // LANG == 0
+
+		CURLHelper::SaveUrlContents(
+		    "https://raw.githubusercontent.com/fiercedeity-productions/font-tool/master/bin/" SERVER_FILE_NAME,
+		    SERVER_FILE_NAME);
+	} else {
+		enableControls();
+
+		updateStatus(UP_TO_DATE);
+		std::this_thread::sleep_for(std::chrono::seconds(2));
+		updateStatus(READY);
+		return;
+	}
+
 	enableControls();
 }

@@ -1,3 +1,5 @@
+#define INTERNAL_VERSION "0.9"
+
 #ifndef INITIALIZED_LOCALE
 #define INITIALIZED_LOCALE
 
@@ -6,6 +8,13 @@
 #endif // LANG
 
 #if LANG == 0
+#ifdef _M_X64
+#pragma message("x64")
+#define SERVER_FILE_NAME "font-tool-x86_64-en.exe"
+#else
+#pragma message("x86")
+#define SERVER_FILE_NAME "font-tool-x86-en.exe"
+#endif // _M_X64
 #pragma message("Compiling in English")
 #pragma setlocale("en-GB")
 #define ADD_FILES "Add Files"
@@ -46,15 +55,25 @@
 #define DESC_DESC "Written in C++ with the WxWidgets GUI library.\n"
 #define DESC_COPYRIGHT                                                                                                         \
 	"2018. You may modify or distribute this software as you wish. Contact James Yu in person for the source code."
-#define VERSION "1.0EN"
+#define VERSION INTERNAL_VERSION "EN"
 #define BUSY NAME ": Busy"
 #define INFORMATION "About"
 #define CLOSE "Close"
 #define DESTROY "Destroy"
 #define WILL_IT_DESTROY "Will it destroy?"
 #define UPDATE "Update"
+#define CHECKING_UPDATES "Checking for updates"
+#define DOWNLOADING_VERSION "Downloading version"
+#define UP_TO_DATE "All up to date!"
 
 #elif LANG == 1
+#ifdef _M_X64
+#pragma message("x64")
+#define SERVER_FILE_NAME "font-tool-x86_64-de.exe"
+#else
+#pragma message("x86")
+#define SERVER_FILE_NAME "font-tool-x86-de.exe"
+#endif // _M_X64
 #pragma setlocale("de-LI")
 #pragma message("Auf Deutsch kompilieren...")
 #define ADD_FILES "Schriftdateien"
@@ -95,13 +114,18 @@
 #define DESC_DESC "Auf C++ mit der WxWidgets-Bibliothek geschrieben.\n"
 #define DESC_COPYRIGHT                                                                                                         \
 	"2018. Sie dürfen frei dieses Program teilen oder ändern. Für den Quell-Code den James Yu persönlich kontaktieren."
-#define VERSION "1.0DE"
+
+#define VERSION INTERNAL_VERSION "DE"
 #define BUSY NAME ": tätig"
 #define INFORMATION "Informationen"
 #define CLOSE "Program Schließen"
 #define DESTROY "Program Zerstören"
 #define WILL_IT_DESTROY "Wird's sich zerstören?"
 #define UPDATE "Aktualisieren"
+#define CHECKING_UPDATES "Aktualisierungen suchen"
+#define DOWNLOADING "herunterladen"
+#define VERSION_STR "Fassung"
+#define UP_TO_DATE "Schon aktualisiert!"
 
 #endif // LANG == 0 || 1
 
