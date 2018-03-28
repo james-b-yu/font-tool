@@ -65,6 +65,7 @@
 #define CHECKING_UPDATES "Checking for updates"
 #define DOWNLOADING_VERSION "Downloading version"
 #define UP_TO_DATE "All up to date!"
+#define MESSAGE_UPDATED "All updated! Changes will take effect upon next run."
 
 #elif LANG == 1
 #ifdef _M_X64
@@ -126,6 +127,7 @@
 #define DOWNLOADING "herunterladen"
 #define VERSION_STR "Fassung"
 #define UP_TO_DATE "Schon aktualisiert!"
+#define MESSAGE_UPDATED "Die Änderungen werden im Anschluss an die nächste Öffnung in Kraft sein."
 
 #endif // LANG == 0 || 1
 

@@ -947,33 +947,44 @@ void Frame::destroyOnceDone(wxCommandEvent &evt) {
 }
 
 void Frame::updateApplication() {
-	wxPuts(SERVER_FILE_NAME);
+	std::thread([&]() {
+		wxPuts(SERVER_FILE_NAME);
 
-	updateStatus(CHECKING_UPDATES "...");
-	disableControls();
+		updateStatus(CHECKING_UPDATES "...");
+		disableControls();
 
-	// get latest version number
-	std::string str(CURLHelper::GetUrlStringContents(
-	    "https://raw.githubusercontent.com/fiercedeity-productions/font-tool/master/current-version"));
+		// get latest version number
+		std::string str(CURLHelper::GetUrlStringContents(
+		    "https://raw.githubusercontent.com/fiercedeity-productions/font-tool/master/current-version"));
 
-	if (str.compare(INTERNAL_VERSION) != 0) {
+		if (str.compare(INTERNAL_VERSION) != 0) {
 #if LANG == 0
-		updateStatus(DOWNLOADING_VERSION " " + str);
+			updateStatus(DOWNLOADING_VERSION " " + str + "...");
 #elif LANG == 1
-		updateStatus(VERSION_STR " " + str + " " DOWNLOADING);
+			updateStatus(VERSION_STR " " + str + " " DOWNLOADING "...");
 #endif // LANG == 0
 
-		CURLHelper::SaveUrlContents(
-		    "https://raw.githubusercontent.com/fiercedeity-productions/font-tool/master/bin/" SERVER_FILE_NAME,
-		    SERVER_FILE_NAME);
-	} else {
-		enableControls();
+			CURLHelper::SaveUrlContents(
+			    "https://raw.githubusercontent.com/fiercedeity-productions/font-tool/master/bin/" SERVER_FILE_NAME,
+			    "new-" SERVER_FILE_NAME);
 
-		updateStatus(UP_TO_DATE);
-		std::this_thread::sleep_for(std::chrono::seconds(2));
-		updateStatus(READY);
-		return;
-	}
+			boost::filesystem::rename(args.begin()->ToStdString(), args.begin()->ToStdString() + ".old");
+			boost::filesystem::rename("new-" SERVER_FILE_NAME,
+			                          boost::filesystem::path(args.begin()->ToStdString()).filename().string());
 
-	enableControls();
+			enableControls();
+
+			updateStatus(MESSAGE_UPDATED);
+			std::this_thread::sleep_for(std::chrono::seconds(2));
+			updateStatus(READY);
+		} else {
+			enableControls();
+
+			updateStatus(UP_TO_DATE);
+			std::this_thread::sleep_for(std::chrono::seconds(2));
+			updateStatus(READY);
+			return;
+		}
+	})
+	    .detach();
 }

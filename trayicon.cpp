@@ -111,7 +111,8 @@ void TrayIcon::showAbout(wxCommandEvent &evt) {
 }
 
 void TrayIcon::update(wxCommandEvent &evt) {
+	evt.Skip();
 	if (window) {
-		std::thread([&]() { ((Frame *) window)->updateApplication(); }).detach();
+		((Frame *) window)->updateApplication();
 	}
 }

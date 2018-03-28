@@ -27,6 +27,10 @@ bool App::OnInit() {
 	auto path = boost::filesystem::path(argv[0].ToStdString()).parent_path().string().c_str();
 	SetCurrentDirectoryA(path);
 
+	if (boost::filesystem::is_regular_file(argv[0].ToStdString() + ".old")) {
+		boost::filesystem::remove(argv[0].ToStdString() + ".old");
+	}
+
 	// create a frame
 	frame = new Frame(wxString::FromUTF8(NAME), argv.GetArguments());
 	// frame->SetIcon(wxIcon("icon.ico", wxBITMAP_TYPE_ICO));
