@@ -12,8 +12,14 @@
 #include <wx/aboutdlg.h>
 
 wxDEFINE_EVENT(CLOSE_WINDOW, wxCommandEvent);
+wxDEFINE_EVENT(UPDATE_APPLICATION, wxCommandEvent);
+// wxDEFINE_EVENT(ENABLE_CONTROLS, wxCommandEvent);
+// wxDEFINE_EVENT(DISABLE_CONTROLS, wxCommandEvent);
 BEGIN_EVENT_TABLE(Frame, wxFrame)
 EVT_COMMAND(wxID_ANY, CLOSE_WINDOW, Frame::destroyOnceDone)
+EVT_COMMAND(wxID_ANY, UPDATE_APPLICATION, Frame::updateTest)
+// EVT_COMMAND(wxID_ANY, ENABLE_CONTROLS, Frame::enableControls)
+// EVT_COMMAND(wxID_ANY, DISABLE_CONTROLS, Frame::disableControls)
 EVT_ICONIZE(Frame::hide)
 EVT_CHAR_HOOK(Frame::onKey)
 END_EVENT_TABLE()
@@ -24,7 +30,8 @@ Frame::Frame(wxString name, wxArrayString args)
 	SetMaxSize(wxSize(480, 480));
 	SetMinSize(wxSize(480, 240));
 
-	trayIcon = new TrayIcon(this);
+	trayIcon     = new TrayIcon(this);
+	readyMessage = READY;
 
 	// define components
 	panel                = new wxPanel(this);
@@ -166,10 +173,12 @@ void Frame::waitForCompletion(bool reset, bool loadArgs) {
 
 		std::thread(SendMessageA, HWND_BROADCAST, WM_FONTCHANGE, NULL, NULL).detach();
 	}
+
 	enableControls();
 }
 
 void Frame::addFontFilesFromDialog(wxCommandEvent &evt) {
+	evt.Skip();
 	updateStatus(A_FONT_FILES "...");
 	// open dialogue
 	wxFileDialog fontFileDialog(
@@ -181,7 +190,7 @@ void Frame::addFontFilesFromDialog(wxCommandEvent &evt) {
 	    wxFD_OPEN | wxFD_FILE_MUST_EXIST | wxFD_MULTIPLE);
 	if (fontFileDialog.ShowModal() == wxID_CANCEL) {
 		Enable(); // reenable as window is disabled from the tray
-		updateStatus(READY);
+		updateStatus(readyMessage);
 		return;
 	}
 
@@ -265,12 +274,13 @@ void Frame::addFontFromInfoAsync(FontInfo currentFont) {
 }
 
 void Frame::addFontFoldersFromDialog(wxCommandEvent &evt) {
+	evt.Skip();
 	updateStatus(A_FONT_FOLDERS);
 	// open folder dialogue
 	wxDirDialog fontDirDialog(this, wxString::FromUTF8(A_FONT_FOLDERS), "%APPDATA%", wxDD_DEFAULT_STYLE | wxDD_DIR_MUST_EXIST);
 	if (fontDirDialog.ShowModal() == wxID_CANCEL) {
 		Enable(); // reenable as window is disabled from the tray
-		updateStatus(READY);
+		updateStatus(readyMessage);
 		return;
 	}
 
@@ -355,12 +365,22 @@ void Frame::addFontFolderAsync(std::string dirPath, std::string folderName) {
 bool Frame::addFont(FontInfo &font) {
 	bool success;
 	try {
+#if LANG == 0
 		updateStatus(LG ": " + font.fileName);
+#elif LANG == 1
+		updateStatus(font.fileName + " " LG);
+#endif // LANG == 0
 		success = AddFontResourceA(font.path.c_str());
 
 		if (success) {
 			succeededFontFiles.push_back(font);
+
+#if LANG == 0
 			updateStatus(LD ": " + font.fileName);
+#elif LANG == 1
+			updateStatus(font.fileName + " " LD);
+#endif // LANG == 0
+
 			changed = true;
 		} else
 			failedFontFiles.push_back(font), updateStatus();
@@ -376,6 +396,7 @@ bool Frame::addFont(FontInfo &font) {
 }
 
 void Frame::removeAllFontsWithButton(wxCommandEvent &evt) {
+	evt.Skip();
 	disableControls();
 
 	std::ofstream clear(databasePath, std::ofstream::out | std::ofstream::trunc);
@@ -396,14 +417,27 @@ bool Frame::removeFont(FontInfo &font) {
 	try {
 		bool temp;
 		int  count = 0;
+#if LANG == 0
 		updateStatus(ULG ": " + font.fileName);
+#elif LANG == 1
+		updateStatus(font.fileName + " " ULG);
+#endif // LANG == 0
 		while ((temp = RemoveFontResourceA(font.path.c_str()))) {
 			if (count == 0)
 				success = temp;
 			count++;
 		}
-		if (success)
-			addToRemoveQueue(succeededFontFiles, font), updateStatus(ULD ": " + font.fileName), changed = true;
+		if (success) {
+			addToRemoveQueue(succeededFontFiles, font);
+
+#if LANG == 0
+			updateStatus(ULD ": " + font.fileName);
+#elif LANG == 1
+			updateStatus(font.fileName + " " ULD);
+#endif // LANG == 0
+
+			changed = true;
+		}
 		updateStatus();
 		std::lock_guard<std::mutex> guard(m);
 		processCount--;
@@ -540,6 +574,8 @@ void Frame::closeOnceDone() {
 }
 
 void Frame::onClose(wxCloseEvent &evt) {
+	// evt.Skip();
+
 	if (!busy) {
 		evt.StopPropagation();
 		disableControls();
@@ -598,6 +634,8 @@ void Frame::updateStatus(std::string newStatus) {
 }
 
 void Frame::removeSelected(wxCommandEvent &evt) {
+	evt.Skip();
+
 	wxArrayTreeItemIds ids;
 	fontTree->GetSelections(ids);
 	bool shouldRemove = false;
@@ -717,6 +755,8 @@ void Frame::addFontsFromFile() {
 }
 
 void Frame::handleDroppedFiles(wxDropFilesEvent &evt) {
+	evt.Skip();
+
 	if (evt.GetNumberOfFiles() > 0) {
 		disableControls();
 
@@ -737,12 +777,16 @@ void Frame::handleDroppedFiles(wxDropFilesEvent &evt) {
 }
 
 void Frame::handleSelectionChanged(wxTreeEvent &evt) {
-	if (shouldEnableRemove())
-		removeSelectedButton->Enable();
-	else
-		removeSelectedButton->Disable();
-
 	evt.Skip();
+
+	if (!busy) {
+		if (shouldEnableRemove())
+			removeSelectedButton->Enable();
+		else
+			removeSelectedButton->Disable();
+
+		wxPuts("SELECTION CHANGED");
+	}
 }
 
 void Frame::hide(wxIconizeEvent &evt) {
@@ -750,6 +794,8 @@ void Frame::hide(wxIconizeEvent &evt) {
 }
 
 void Frame::treePopupMenu(wxMouseEvent &evt) {
+	evt.Skip();
+
 	wxTreeItemId id = fontTree->HitTest(evt.GetPosition());
 	if (id && id.m_pItem && id.IsOk()) {
 		bool               isAlreadySelected = false;
@@ -803,10 +849,11 @@ void Frame::treePopupMenu(wxMouseEvent &evt) {
 
 		fontTree->PopupMenu(menu);
 	}
-	evt.Skip();
 }
 
 void Frame::openSelected(wxCommandEvent &evt) {
+	evt.Skip();
+
 	wxTreeItemId id = fontTree->HitTest(((TreeEventData *) evt.GetEventUserData())->msEvent.GetPosition());
 	fontTree->UnselectAll();
 	fontTree->SelectItem(id);
@@ -823,8 +870,9 @@ void Frame::openSelected(wxCommandEvent &evt) {
 }
 
 void Frame::treeActivated(wxTreeEvent &evt) {
-	wxTreeItemId id = evt.GetItem();
+	evt.Skip();
 
+	wxTreeItemId id = evt.GetItem();
 	if (id.IsOk() && id.m_pItem && id != fontTreeFailed && id != fontTreeFiles && id != fontTreeFolders) {
 		TreeItemData *data = ((TreeItemData *) fontTree->GetItemData(id));
 		std::string   path;
@@ -846,6 +894,8 @@ void Frame::treeActivated(wxTreeEvent &evt) {
 }
 
 void Frame::showAbout(wxCommandEvent &evt) {
+	evt.Skip();
+
 	wxAboutDialogInfo info;
 	info.SetName(wxString::FromUTF8(DESC_NAME));
 	info.SetVersion(wxString::FromUTF8(VERSION));
@@ -857,6 +907,8 @@ void Frame::showAbout(wxCommandEvent &evt) {
 }
 
 void Frame::treeMotion(wxMouseEvent &evt) {
+	evt.Skip();
+
 	if (!fontTree->HitTest(evt.GetPosition()).IsOk())
 		fontTree->SetToolTip("");
 }
@@ -902,11 +954,13 @@ void Frame::enableControls() {
 	fontTree->Bind(wxEVT_MOTION, &Frame::treeMotion, this);
 	panel->DragAcceptFiles(true);
 
-	updateStatus(READY);
+	updateStatus(readyMessage);
 	wxPuts(wxString::FromUTF8(READY));
 }
 
 void Frame::getTreeItemTooltip(wxTreeEvent &evt) {
+	evt.Skip();
+
 	std::string toolTip = ((TreeItemData *) fontTree->GetItemData(evt.GetItem()))->folder
 	                          ? ((TreeItemData *) fontTree->GetItemData(evt.GetItem()))->folderPath + " (" +
 	                                std::to_string(fontTree->GetChildrenCount(evt.GetItem(), false)) + ")"
@@ -914,16 +968,16 @@ void Frame::getTreeItemTooltip(wxTreeEvent &evt) {
 
 	std::replace(toolTip.begin(), toolTip.end(), '/', '\\');
 	evt.SetToolTip(toolTip);
-	evt.Skip();
 }
 
 void Frame::onKey(wxKeyEvent &evt) {
+	evt.Skip();
+
 	if ((evt.GetKeyCode() == 8 || evt.GetKeyCode() == 127) && !busy) {
 		wxCommandEvent evt;
 		removeSelected(evt);
 		return;
 	}
-	evt.Skip();
 }
 
 bool Frame::shouldEnableRemove() {
@@ -938,6 +992,8 @@ bool Frame::shouldEnableRemove() {
 }
 
 void Frame::destroyOnceDone(wxCommandEvent &evt) {
+	evt.Skip();
+
 	wxPuts(wxString::FromUTF8(WILL_IT_DESTROY));
 	Destroy();
 	Destroy();
@@ -946,16 +1002,26 @@ void Frame::destroyOnceDone(wxCommandEvent &evt) {
 	Destroy();
 }
 
-void Frame::updateApplication() {
+void Frame::updateTest(wxCommandEvent &evt) {
+	evt.Skip();
+	disableControls();
+
 	std::thread([&]() {
-		wxPuts(SERVER_FILE_NAME);
-
-		updateStatus(CHECKING_UPDATES "...");
-		disableControls();
-
 		// get latest version number
+		updateStatus(CHECKING_UPDATES "...");
+
+		CURLcode    code;
 		std::string str(CURLHelper::GetUrlStringContents(
-		    "https://raw.githubusercontent.com/fiercedeity-productions/font-tool/master/current-version"));
+		    "https://raw.githubusercontent.com/fiercedeity-productions/font-tool/master/current-version", &code));
+
+		if (code != CURLE_OK) {
+			enableControls();
+			updateStatus(E_UPDATE_INFO);
+			std::this_thread::sleep_for(std::chrono::seconds(5));
+			if (!busy)
+				updateStatus(readyMessage);
+			return;
+		}
 
 		if (str.compare(INTERNAL_VERSION) != 0) {
 #if LANG == 0
@@ -966,23 +1032,35 @@ void Frame::updateApplication() {
 
 			CURLHelper::SaveUrlContents(
 			    "https://raw.githubusercontent.com/fiercedeity-productions/font-tool/master/bin/" SERVER_FILE_NAME,
-			    "new-" SERVER_FILE_NAME);
+			    "new-" SERVER_FILE_NAME, &code);
+
+			if (code != CURLE_OK) {
+				enableControls();
+				updateStatus(E_UPDATE_DOWNLOAD);
+				std::this_thread::sleep_for(std::chrono::seconds(5));
+				if (!busy)
+					updateStatus(readyMessage);
+				return;
+			}
 
 			boost::filesystem::rename(args.begin()->ToStdString(), args.begin()->ToStdString() + ".old");
 			boost::filesystem::rename("new-" SERVER_FILE_NAME,
 			                          boost::filesystem::path(args.begin()->ToStdString()).filename().string());
 
+			updatePending = true;
 			enableControls();
+			updateStatus(UPDATE_READY);
+			readyMessage = MESSAGE_UPDATED;
 
-			updateStatus(MESSAGE_UPDATED);
 			std::this_thread::sleep_for(std::chrono::seconds(2));
-			updateStatus(READY);
+			if (!busy)
+				updateStatus(readyMessage);
 		} else {
 			enableControls();
-
 			updateStatus(UP_TO_DATE);
 			std::this_thread::sleep_for(std::chrono::seconds(2));
-			updateStatus(READY);
+			if (!busy)
+				updateStatus(readyMessage);
 			return;
 		}
 	})

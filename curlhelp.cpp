@@ -37,10 +37,13 @@ class CURLHelper {
 	}
 
   public:
-	static char *GetUrlStringContents(const char *url) { // define function to return url contents as a string
+	static char *GetUrlStringContents(const char *url,
+	                                  CURLcode *  res = 0) { // define function to return url contents as a string
 		CURL *   curl = curl_easy_init();
-
 		string   s;
+
+		if (!res)
+			res = new CURLcode;
 		init_string(&s);
 
 		if (curl) {
@@ -48,7 +51,7 @@ class CURLHelper {
 			curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writefuncstr);
 			curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, true);
 			curl_easy_setopt(curl, CURLOPT_WRITEDATA, &s);
-			curl_easy_perform(curl);
+			*res = curl_easy_perform(curl);
 			curl_easy_cleanup(curl);
 		}
 
@@ -60,19 +63,20 @@ class CURLHelper {
 		return contents;
 	}
 
-	static void SaveUrlContents(const char *url, const char *file) { // define function to return url contents as a string
+	static void SaveUrlContents(const char *url, const char *file,
+	                            CURLcode *res = 0) { // define function to return url contents as a string
 		CURL *  curl = curl_easy_init();
 		FILE *  fp   = fopen(file, "wb");
 
-		if (curl) {
+		if (!res)
+			res = new CURLcode;
 
+		if (curl) {
 			curl_easy_setopt(curl, CURLOPT_URL, url);
 			curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writefuncfile);
 			curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, true);
 			curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
-			curl_easy_perform(curl);
-
-			/* always cleanup */
+			*res = curl_easy_perform(curl);
 			curl_easy_cleanup(curl);
 		}
 

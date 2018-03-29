@@ -1,4 +1,4 @@
-#define INTERNAL_VERSION "1.1"
+#define INTERNAL_VERSION "1.11"
 
 #ifndef INITIALIZED_LOCALE
 #define INITIALIZED_LOCALE
@@ -56,7 +56,8 @@
 #define DESC_COPYRIGHT                                                                                                         \
 	"2018. You may modify or distribute this software as you wish. Contact James Yu in person for the source code."
 #define VERSION INTERNAL_VERSION "EN"
-#define BUSY NAME ": Busy"
+#define BUSY_NAME NAME ": Busy"
+#define UPDATE_AVAILABLE_NAME NAME ": Update Availale"
 #define INFORMATION "About"
 #define CLOSE "Close"
 #define DESTROY "Destroy"
@@ -65,7 +66,10 @@
 #define CHECKING_UPDATES "Checking for updates"
 #define DOWNLOADING_VERSION "Downloading version"
 #define UP_TO_DATE "All up to date!"
-#define MESSAGE_UPDATED "All updated! Changes will take effect upon next run."
+#define MESSAGE_UPDATED "Update will take effect upon next run."
+#define UPDATE_READY "Update ready!"
+#define E_UPDATE_INFO "Error retrieving update information."
+#define E_UPDATE_DOWNLOAD "Error downloading update."
 
 #elif LANG == 1
 #ifdef _M_X64
@@ -97,10 +101,10 @@
 #define READY "Fertig"
 #define LG_FONTS "Schriften hinzufügen"
 #define INDEXING "Indizieren"
-#define LG "Hinzufügen"
-#define LD "Hinzugefügt"
-#define ULG "Entfernen"
-#define ULD "Entfernte"
+#define LG "hinzufügen"
+#define LD "hinzugefügt"
+#define ULG "entfernen"
+#define ULD "entfernt"
 #define ABOUT_TO_CLOSE "Program ist bereit, sich zu schließen"
 #define R_SELECTIONS "Ausgewälte Artikel entfernen"
 #define R_FOLDER "Ordner entfernen"
@@ -117,7 +121,8 @@
 	"2018. Sie dürfen frei dieses Program teilen oder ändern. Für den Quell-Code den James Yu persönlich kontaktieren."
 
 #define VERSION INTERNAL_VERSION "DE"
-#define BUSY NAME ": tätig"
+#define BUSY_NAME NAME ": tätig"
+#define UPDATE_AVAILABLE_NAME NAME ": Aktualisierung vergübar"
 #define INFORMATION "Informationen"
 #define CLOSE "Program Schließen"
 #define DESTROY "Program Zerstören"
@@ -127,7 +132,10 @@
 #define DOWNLOADING "herunterladen"
 #define VERSION_STR "Fassung"
 #define UP_TO_DATE "Schon aktualisiert!"
+#define UPDATE_READY "Aktualisierung heruntergeladen!"
 #define MESSAGE_UPDATED "Die Änderungen werden im Anschluss an die nächste Öffnung in Kraft sein."
+#define E_UPDATE_INFO "Fehler beim Wiederherstellen der Informationen der Aktualisierung."
+#define E_UPDATE_DOWNLOAD "Fehler beim Herunterladen der Aktualisierung."
 
 #endif // LANG == 0 || 1
 

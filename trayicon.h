@@ -3,6 +3,8 @@
 #include <wx/taskbar.h>
 #include <wx/wx.h>
 
+extern const wxEventTypeTag<wxCommandEvent> UPDATE_APPLICATION;
+
 class TrayIcon : public wxTaskBarIcon {
   private:
 	wxFrame *window;

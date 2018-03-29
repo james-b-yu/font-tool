@@ -24,8 +24,9 @@ bool App::OnInit() {
 		return false;
 	}
 
-	auto path = boost::filesystem::path(argv[0].ToStdString()).parent_path().string().c_str();
-	SetCurrentDirectoryA(path);
+	auto path = boost::filesystem::path(argv[0].ToStdString()).parent_path().string();
+	SetCurrentDirectoryA(path.c_str());
+	wxPuts(path);
 
 	if (boost::filesystem::is_regular_file(argv[0].ToStdString() + ".old")) {
 		boost::filesystem::remove(argv[0].ToStdString() + ".old");

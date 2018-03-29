@@ -94,33 +94,38 @@ class Frame : public wxFrame {
 	void removeSelected(wxCommandEvent &evt);
 	void handleTreeItem(wxTreeItemId id, bool removeToo = true);
 
-	std::string   status;
+	std::string status;
+	std::string readyMessage;
+
 	void          updateStatus();
 	void          updateStatus(std::string newStatus);
 	void          hide(wxIconizeEvent &evt);
 	void          treePopupMenu(wxMouseEvent &evt);
 	void          openSelected(wxCommandEvent &evt);
 	void          treeActivated(wxTreeEvent &evt);
-	void          disableControls();
 	void          enableControls();
+	void          disableControls();
 	void          getTreeItemTooltip(wxTreeEvent &evt);
 	void          onKey(wxKeyEvent &evt);
 	void          treeMotion(wxMouseEvent &evt);
 	wxArrayString args;
-	bool          changed = false;
 
+	bool changed = false;
+
+	void updateTest(wxCommandEvent &evt);
 	bool shouldEnableRemove();
 
 	TrayIcon *trayIcon;
 	DECLARE_EVENT_TABLE();
 
   public:
-	void updateApplication();
 	void onClose(wxCloseEvent &evt);
 	void addFontFilesFromDialog(wxCommandEvent &evt);
 	void addFontFoldersFromDialog(wxCommandEvent &evt);
 	void showAbout(wxCommandEvent &evt);
+
 	bool busy;
+	bool updatePending = false;
 
 	Frame(wxString name, wxArrayString args);
 	~Frame();

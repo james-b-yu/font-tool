@@ -16,6 +16,7 @@ TrayIcon::TrayIcon(wxFrame *window)
 }
 
 void TrayIcon::showWindow(wxTaskBarIconEvent &evt) {
+	evt.Skip();
 	if (window) {
 		if (!window->IsShownOnScreen()) {
 			window->Raise();
@@ -29,13 +30,16 @@ void TrayIcon::showWindow(wxTaskBarIconEvent &evt) {
 
 wxMenu *TrayIcon::CreatePopupMenu() {
 	wxMenu *    menu  = new wxMenu();
-	wxMenuItem *title = new wxMenuItem(menu, wxID_HOME, wxString::FromUTF8(BUSY));
-
-	if (window && !((Frame *) window)->busy) {
-		title->SetItemLabel(wxString::FromUTF8(NAME));
-	}
+	wxMenuItem *title = new wxMenuItem(menu, wxID_HOME);
 
 	if (window) {
+		if (((Frame *) window)->busy)
+			title->SetItemLabel(wxString::FromUTF8(BUSY_NAME));
+		else if (((Frame *) window)->updatePending)
+			title->SetItemLabel(UPDATE_AVAILABLE_NAME);
+		else
+			title->SetItemLabel(wxString::FromUTF8(NAME));
+
 		wxFont font = window->GetFont();
 		font.SetWeight(wxFONTWEIGHT_BOLD);
 		title->SetFont(font);
@@ -51,13 +55,15 @@ wxMenu *TrayIcon::CreatePopupMenu() {
 	if (window && !((Frame *) window)->busy) {
 		menu->Append(wxID_FILE1, wxString::FromUTF8(A_FONT_FILES));
 		menu->Append(wxID_FILE2, wxString::FromUTF8(A_FONT_FOLDERS));
-		menu->Append(wxID_FILE3, wxString::FromUTF8(UPDATE));
+		if (!((Frame *) window)->updatePending)
+			menu->Append(wxID_FILE3, wxString::FromUTF8(UPDATE));
 		menu->Append(wxID_CLOSE_FRAME, wxString::FromUTF8(CLOSE));
 
 		Bind(wxEVT_COMMAND_MENU_SELECTED, &TrayIcon::addFontFiles, this, wxID_FILE1);
 		Bind(wxEVT_COMMAND_MENU_SELECTED, &TrayIcon::addFontFolders, this, wxID_FILE2);
 		Bind(wxEVT_COMMAND_MENU_SELECTED, &TrayIcon::closeFrame, this, wxID_CLOSE_FRAME);
-		Bind(wxEVT_COMMAND_MENU_SELECTED, &TrayIcon::update, this, wxID_FILE3);
+		if (!((Frame *) window)->updatePending)
+			Bind(wxEVT_COMMAND_MENU_SELECTED, &TrayIcon::update, this, wxID_FILE3);
 	} else {
 		menu->Append(wxID_ABORT, wxString::FromUTF8(DESTROY));
 		Bind(wxEVT_COMMAND_MENU_SELECTED, &TrayIcon::abort, this, wxID_ABORT);
@@ -67,6 +73,7 @@ wxMenu *TrayIcon::CreatePopupMenu() {
 }
 
 void TrayIcon::abort(wxCommandEvent &evt) {
+	evt.Skip();
 	if (window) {
 		window->Destroy();
 	}
@@ -84,6 +91,7 @@ void TrayIcon::showWindowCommand(wxCommandEvent &evt) {
 }
 
 void TrayIcon::addFontFiles(wxCommandEvent &evt) {
+	evt.Skip();
 	if (window) {
 		window->Disable();
 		((Frame *) window)->addFontFilesFromDialog(evt);
@@ -91,6 +99,7 @@ void TrayIcon::addFontFiles(wxCommandEvent &evt) {
 }
 
 void TrayIcon::addFontFolders(wxCommandEvent &evt) {
+	evt.Skip();
 	if (window) {
 		window->Disable();
 		((Frame *) window)->addFontFoldersFromDialog(evt);
@@ -98,6 +107,7 @@ void TrayIcon::addFontFolders(wxCommandEvent &evt) {
 }
 
 void TrayIcon::closeFrame(wxCommandEvent &evt) {
+	evt.Skip();
 	if (window) {
 		wxCloseEvent clevt;
 		((Frame *) window)->onClose(clevt);
@@ -105,6 +115,7 @@ void TrayIcon::closeFrame(wxCommandEvent &evt) {
 }
 
 void TrayIcon::showAbout(wxCommandEvent &evt) {
+	evt.Skip();
 	if (window) {
 		((Frame *) window)->showAbout(evt);
 	}
@@ -113,6 +124,7 @@ void TrayIcon::showAbout(wxCommandEvent &evt) {
 void TrayIcon::update(wxCommandEvent &evt) {
 	evt.Skip();
 	if (window) {
-		((Frame *) window)->updateApplication();
+		// ((Frame *) window)->updateApplication();
+		wxPostEvent(window, wxCommandEvent(UPDATE_APPLICATION));
 	}
 }
