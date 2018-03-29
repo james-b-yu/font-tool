@@ -13,9 +13,9 @@ A minimal UI has been created to make it as easy as possible to load and unload 
 
 Loaded fonts are convieniently displayed in a tree view and sorted by the  manner in which they were added.
 
-Although the application is not a font manager (see Why Not?), it tries to display fonts in folders as they are arranged on the disk. Fonts can be revealed by activating their corresponding item in the tree view.
+Although the application is not a font manager (see <a href="#why-not">Why Not?</a>), it tries to display fonts in folders as they are arranged on the disk. Fonts can be revealed by activating their corresponding item in the tree view.
 
-Font Tool indexes loaded fonts into a database file `fonts` which is stored relative to the executable. The `fonts` file allows for the programme to automatically re-load previously-loaded fonts upon startup, further increasing the user's productivity if parallelisation was not enough. Of course, this means that Font Tool is partially dependant on a database file to operate as smoothly as possible (see Why Not?).
+Font Tool indexes loaded fonts into a database file `fonts` which is stored relative to the executable. The `fonts` file allows for the programme to automatically re-load previously-loaded fonts upon startup, further increasing the user's productivity if parallelisation was not enough. Of course, this means that Font Tool is partially dependant on a database file to operate as smoothly as possible (see  <a href="#why-not">Why Not?</a>).
 
 ## Who?
 Font Tool is developed by a humble 15-year-old enduring the endless, excrutiating struggle of exam preparation. Due to the small nature of the project, compilation takes place through the use of scripts in _shell script_ which call the _MSVC_ compiler. This, of course, is unlike the programme itself, in that it is very <i>un</i>portable. Please feel free to fork this project, convert it to use a makefile instead, and request to pull.
