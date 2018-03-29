@@ -117,7 +117,13 @@ void TrayIcon::showAbout(wxCommandEvent &evt) {
 
 void TrayIcon::update(wxCommandEvent &evt) {
 	if (window) {
-		// ((Frame *) window)->updateApplication();
+		window->Show();
+		window->Restore();
+		window->Raise();
+		window->Show();
+		window->Restore();
+		window->Raise();
+
 		wxPostEvent(window, wxCommandEvent(UPDATE_APPLICATION));
 	}
 }

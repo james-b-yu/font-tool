@@ -1,4 +1,4 @@
-#define INTERNAL_VERSION "1.1.2"
+#define INTERNAL_VERSION "1.1.3"
 
 #ifndef INITIALIZED_LOCALE
 #define INITIALIZED_LOCALE
@@ -52,12 +52,13 @@
 #define OPEN "Open"
 #define NAME "Font Tool"
 #define DESC_NAME NAME ": Use fonts without administrator rights!"
-#define DESC_DESC "Written in C++ with the WxWidgets GUI library.\n"
+#define DESC_DESC "Written in C++ with the WxWidgets GUI library. See this project's GitHub page for the source code.\n"
 #define DESC_COPYRIGHT                                                                                                         \
-	"2018. You may modify or distribute this software as you wish under the GPLv3 license. See GitHub the source code."
+	"2018. You may modify or distribute this software as you wish under the MIT license, which can be obtained from "          \
+	"https://opensource.org/licenses/MIT."
 #define VERSION INTERNAL_VERSION "EN"
 #define BUSY_NAME NAME ": Busy"
-#define UPDATE_AVAILABLE_NAME NAME ": Update Availale"
+#define UPDATE_AVAILABLE_NAME NAME ": Update Available"
 #define INFORMATION "About"
 #define CLOSE "Close"
 #define DESTROY "Destroy"
@@ -116,8 +117,11 @@
 #define OPEN "Öffnen"
 #define NAME "Schrifthilfsprogramm"
 #define DESC_NAME NAME ": Benutzen Sie Schriften ohne Rechte eines Administrators!"
-#define DESC_DESC "Auf C++ mit der WxWidgets-Bibliothek geschrieben.\n"
-#define DESC_COPYRIGHT "2018. Sie dürfen frei dieses Program teilen oder ändern. Sehen Sie Für den Quell-Code die GitHub-Seite."
+#define DESC_DESC                                                                                                              \
+	"Auf C++ mit der WxWidgets-Bibliothek geschrieben. Sehen Sie für den Quell-Code die GitHub-Seite dieses Projekts.\n"
+#define DESC_COPYRIGHT                                                                                                         \
+	"2018. Sie dürfen frei dieses Program teilen oder ändern, hinsichtlich des Lizenzes MIT, das bei "                       \
+	"https://opensource.org/licenses/MIT gefunden werden kann."
 
 #define VERSION INTERNAL_VERSION "DE"
 #define BUSY_NAME NAME ": tätig"
