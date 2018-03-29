@@ -27,6 +27,9 @@ Font Tool is _dumb_! Error handling and font organisation are of minimal existan
 
 Font Tool is _buggy_! Of course, it is created only by a school kid. There are still many ways to achieve `segmentation fault`s even after months of development. Please feel free to debug and fix these issues!
 
+## Get
+To get the programme, go to the _releases_ tab in the code view.
+
 ## Code
 Font Tool is developed in <a href="https://isocpp.org/">C++</a> and C++ only. It relies on <a href="https://www.wxwidgets.org/">WxWidgets</a> to provide it's GUI, <a href="http://www.boost.org/">boost</a> for high-level filesystem functions, <a href="https://curl.haxx.se/">curl</a> to download updates, and <a href="https://www.threadingbuildingblocks.org/">Intel TBB</a> for concurrent vectors. As you can see, the code virtually crying for optimisation.
 
