@@ -2,6 +2,7 @@
 ## What?
 Font Tool is a small utility to help people who operate on many workstations use their fonts in a portable way. This removes the necessity of having administrator privileges: the fonts are loaded into memory temporarily and are unloaded once the user logs off or closes the programme. No changes to the disk are made, save for a small `fonts` file which acts as a database to store locations of added fonts.
 
+<img src="screenshot.png" alt="screenshot of the programme">
 
 ## Why?
 Font Tool has been designed especially with portability and ease of use in mind. The executable weighs in at only ~1MB, is statically-linked, operating within a single executable which can be renamed and placed anywhere, and makes no permanent changes to the computer. However, for the most portability, it is recommended to place the executable in a folder on the _same drive_ as the user's font files to remove the dependency of a changing drive letter.
