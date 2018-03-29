@@ -6,7 +6,7 @@ Font Tool is a small utility to help people who operate on many workstations use
 ## Why?
 Font Tool has been designed especially with portability and ease of use in mind. The executable weighs in at only ~1MB, is statically-linked, operating within a single executable which can be renamed and placed anywhere, and makes no permanent changes to the computer. However, for the most portability, it is recommended to place the executable in a folder on the _same drive_ as the user's font files to remove the dependency of a changing drive letter.
 
-One aspect that makes this application much better for font loading than other font-loading applications, apart from its easy-to-use interface, is the multi-threaded approach to loading fonts. Instead of waiting `n * t` time for fonts to load, one must only wait `t` time as fonts are loaded in parallel,  boosting productivity and ease-of-use. (`n` is the number of fonts; `t` is the time taken for each font to load.)
+One aspect that makes this application much better for font loading than other font-loading applications, apart from its easy-to-use interface, is the multi-threaded approach to loading fonts. Instead of waiting `n * t` time for fonts to load, one must only wait `t` time as fonts are loaded in parallel,  boosting productivity and ease-of-use. (`n` is the number of fonts; `t` is the time taken for each font to load).
 
 ## How?
 A minimal UI has been created to make it as easy as possible to load and unload fonts. One can load fonts by using the dedicated button, through drag-and-drop onto the window, through drag-and-drop onto the executable, as well as through a menu in the system tray for easy access. This vast array of methods is part of a struggle to make the application as intuitive to use as possible.
@@ -26,6 +26,8 @@ Font Tool is no font manager. Font managers include <a href="https://www.neuber.
 Font Tool is _dumb_! Error handling and font organisation are of minimal existance. The only way the programme attempts to group fonts is by their folder (if they were added as part of a folder), or whether the font is unable to be loaded. Furthermore, fonts are displayed by their filename, and the software makes no attempt to provide information to do with font contents: no previews, no display of font name, no display of font weight, etc. However, this allows the programme to be as lightweight as possible, and to minimise the amount of time required for use, maximising the time the user actually uses the loaded fonts.
 
 Font Tool is _buggy_! Of course, it is created only by a school kid. There are still many ways to achieve `segmentation fault`s even after months of development. Please feel free to debug and fix these issues!
+
+Font Tool is not totally independant. As explained in <a href="#how">How?</a>, Font Tool uses a database file `fonts`. This file can be deleted freely before, during and after the use of the programme, without any adverse effects. However, it is cautioned against modifying the `fonts` file directly as `segmentation fault`s can easily occur due to a lack of validation: the programme expects the `fonts` file to be perfectly formed.
 
 ## Get
 To get the programme, go to the _releases_ tab in the code view.
