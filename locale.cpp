@@ -1,4 +1,4 @@
-#define INTERNAL_VERSION "1.11"
+#define INTERNAL_VERSION "1.1.1"
 
 #ifndef INITIALIZED_LOCALE
 #define INITIALIZED_LOCALE
@@ -54,7 +54,7 @@
 #define DESC_NAME NAME ": Use fonts without administrator rights!"
 #define DESC_DESC "Written in C++ with the WxWidgets GUI library.\n"
 #define DESC_COPYRIGHT                                                                                                         \
-	"2018. You may modify or distribute this software as you wish. Contact James Yu in person for the source code."
+	"2018. You may modify or distribute this software as you wish under the GPLv3 license. See GitHub the source code."
 #define VERSION INTERNAL_VERSION "EN"
 #define BUSY_NAME NAME ": Busy"
 #define UPDATE_AVAILABLE_NAME NAME ": Update Availale"
@@ -117,8 +117,7 @@
 #define NAME "Schrifthilfsprogramm"
 #define DESC_NAME NAME ": Benutzen Sie Schriften ohne Rechte eines Administrators!"
 #define DESC_DESC "Auf C++ mit der WxWidgets-Bibliothek geschrieben.\n"
-#define DESC_COPYRIGHT                                                                                                         \
-	"2018. Sie dürfen frei dieses Program teilen oder ändern. Für den Quell-Code den James Yu persönlich kontaktieren."
+#define DESC_COPYRIGHT "2018. Sie dürfen frei dieses Program teilen oder ändern. Sehen Sie Für den Quell-Code die GitHub-Seite."
 
 #define VERSION INTERNAL_VERSION "DE"
 #define BUSY_NAME NAME ": tätig"
