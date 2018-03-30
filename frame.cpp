@@ -1103,6 +1103,7 @@ void Frame::updateTest(wxCommandEvent &evt) {
 
 	// check for updates in a new thread, to prevent the GUI from freezing
 	std::thread([&]() {
+		bool force = GetKeyState(VK_SHIFT) != 0; // holding shift whilst updating forces a download
 		updateStatus(CHECKING_UPDATES "...");
 
 		// get latest version number
@@ -1124,7 +1125,7 @@ void Frame::updateTest(wxCommandEvent &evt) {
 		// check whether the new version number is greater than the installed version number, then install the new version if
 		// so.
 		std::string ins = INTERNAL_VERSION;
-		if (str > ins) {
+		if (str > ins || force) {
 #if LANG == 0
 			updateStatus(DOWNLOADING_VERSION " " + str + "...");
 #elif LANG == 1

@@ -83,6 +83,7 @@
 		"execution": "cpp",
 		"*.png": "cpp",
 		"*.xpm": "cpp",
-		"xthread": "cpp"
+		"xthread": "cpp",
+		"regex": "cpp"
 	}
 }
