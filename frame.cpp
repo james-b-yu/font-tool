@@ -1103,7 +1103,7 @@ void Frame::updateTest(wxCommandEvent &evt) {
 
 	// check for updates in a new thread, to prevent the GUI from freezing
 	std::thread([&]() {
-		bool force = GetKeyState(VK_SHIFT) != 0; // holding shift whilst updating forces a download
+		bool force = GetAsyncKeyState(VK_SHIFT) == -32767; // holding shift whilst updating forces a download
 		updateStatus(CHECKING_UPDATES "...");
 
 		// get latest version number
