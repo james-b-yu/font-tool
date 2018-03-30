@@ -10,6 +10,7 @@
 #include <set>
 #include <thread>
 #include <wx/aboutdlg.h>
+#include <wx/richtext/richtextctrl.h>
 #include <wx/sizer.h>
 
 wxDEFINE_EVENT(CLOSE_WINDOW, wxCommandEvent);
@@ -64,10 +65,10 @@ Frame::Frame(wxString name, wxArrayString args)
 	// put components together
 	topSizer->Add(addButtons, wxSizerFlags().Align(wxCENTRE).Border(wxALL, padding).Expand());
 	addButtons->Add(addFontFilesButton, wxSizerFlags(1).Align(wxCENTRE).Border(wxRIGHT, padding));
-	addButtons->Add(addFontFoldersButton, wxSizerFlags(0).Align(wxCENTRE).Border(wxRIGHT, padding));
+	addButtons->Add(addFontFoldersButton, wxSizerFlags().Align(wxCENTRE).Border(wxRIGHT, padding));
 	// addButtons->Add(recursiveSearch, wxSizerFlags(1).Align(wxCENTRE).Border(wxRIGHT, padding));
-	addButtons->Add(removeSelectedButton, wxSizerFlags(0).Align(wxCENTRE).Border(wxRIGHT, padding));
-	addButtons->Add(removeAllFontsButton, wxSizerFlags(0).Align(wxCENTRE));
+	addButtons->Add(removeSelectedButton, wxSizerFlags().Align(wxCENTRE).Border(wxRIGHT, padding));
+	addButtons->Add(removeAllFontsButton, wxSizerFlags().Align(wxCENTRE));
 
 	topSizer->Add(new wxStaticLine(panel, wxID_ANY, wxDefaultPosition, wxSize(0, 1)), wxSizerFlags().Align(wxCENTRE).Expand());
 	topSizer->Add(fontTree, wxSizerFlags(1).Expand().Border(wxLEFT | wxRIGHT | wxTOP, padding));
@@ -75,10 +76,10 @@ Frame::Frame(wxString name, wxArrayString args)
 
 	statuses->Add(statusText1, wxSizerFlags(1).Expand().Border(wxLEFT | wxRIGHT, padding));
 	statuses->Add(new wxStaticLine(panel, wxID_ANY, wxDefaultPosition, wxSize(1, 0)), wxSizerFlags().Align(wxRIGHT).Expand());
-	statuses->Add(statusText3, wxSizerFlags(0).Border(wxLEFT | wxRIGHT, padding));
+	statuses->Add(statusText3, wxSizerFlags().Border(wxLEFT | wxRIGHT, padding));
 	errorLine = new wxStaticLine(panel, wxID_ANY, wxDefaultPosition, wxSize(1, 0));
 	statuses->Add(errorLine, wxSizerFlags().Align(wxRIGHT).Expand());
-	statuses->Add(statusText2, wxSizerFlags(0).Border(wxLEFT | wxRIGHT, padding));
+	statuses->Add(statusText2, wxSizerFlags().Border(wxLEFT | wxRIGHT, padding));
 	statuses->Show(errorLine, false);
 	statuses->Show(statusText2, false);
 
@@ -116,8 +117,10 @@ Frame::Frame(wxString name, wxArrayString args)
 
 	// open about dlg on first start
 	wxCommandEvent evt;
-	if (!boost::filesystem::is_regular_file(databasePath))
-		showAbout(evt);
+
+	// // show about dialog if "fonts" file is non-exsitant
+	// if (!boost::filesystem::is_regular_file(databasePath))
+	// 	showAbout(evt);
 
 	// filesystem stuff
 	savedFromFile.open(databasePath);
@@ -918,37 +921,78 @@ void Frame::treeActivated(wxTreeEvent &evt) {
 void Frame::showAbout(wxCommandEvent &evt) {
 	evt.Skip();
 
-	// wxAboutDialogInfo info;
-	// info.SetName(wxString::FromUTF8(DESC_NAME));
-	// info.SetVersion(wxString::FromUTF8(VERSION));
-	// info.SetDescription(wxString::FromUTF8(DESC_DESC));
-	// info.SetCopyright(wxString::FromUTF8(DESC_COPYRIGHT));
-	// Disable();
-	// wxAboutBox(info, this);
-	// Enable();
-
 	// initialize the about dialog
-	wxDialog *  aboutDialog = new wxDialog((wxFrame *) this, wxID_ANY, wxString::FromUTF8(ABOUT_NAME));
-	wxPanel *   aboutPanel  = new wxPanel(aboutDialog);
-	wxBoxSizer *aboutSizer  = new wxBoxSizer(wxVERTICAL);
+	wxDialog *      aboutDialog = new wxDialog((wxFrame *) this, wxID_ANY, wxString::FromUTF8(ABOUT_NAME));
+	wxPanel *       aboutPanel  = new wxPanel(aboutDialog);
+	wxBoxSizer *    aboutSizer  = new wxBoxSizer(wxVERTICAL);
+	wxRichTextCtrl *license     = new wxRichTextCtrl(aboutPanel, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize,
+                                                 wxRE_MULTILINE | wxRE_READONLY | wxNO_BORDER);
+	license->SetMargins(padding);
+	license->BeginParagraphSpacing(padding, padding);
+	license->AddParagraph(wxString::FromUTF8(COPYRIGHT_1));
+	license->AddParagraph(wxString::FromUTF8(COPYRIGHT_2));
+	license->AddParagraph(wxString::FromUTF8(COPYRIGHT_3));
+	wxFont font = GetFont();
+	font.SetWeight(wxBOLD);
+	license->BeginFont(font);
+	license->AddParagraph(wxString::FromUTF8(COPYRIGHT_4));
+	license->EndFont();
+	license->EndParagraphSpacing();
+	license->LayoutContent();
+	license->Layout();
+
+	license->Remove(0, 1); // remove stupid new line at begining of text)
+
+	// panel->SetBackgroundColour(wxColour(*wxWHITE));
+	// aboutDialog->SetBackgroundColour(wxColour(*wxWHITE));
 
 	// add the items to the dialog
 	aboutSizer->Add(
 	    new wxStaticText(aboutPanel, wxID_ANY, wxString::FromUTF8(VERSION " " SERVER_FILE_NAME " (" __TIMESTAMP__ ")")),
-	    wxSizerFlags().Align(wxLEFT).Border(wxTOP | wxLEFT | wxRIGHT, padding).Expand());
+	    wxSizerFlags().Align(wxCENTRE).Border(wxLEFT | wxRIGHT, padding).Border(wxTOP | wxBOTTOM, padding / 2));
 	aboutSizer->Add(new wxStaticLine(aboutPanel, wxID_ANY, wxDefaultPosition, wxSize(0, 1)),
 	                wxSizerFlags().Align(wxCENTRE).Expand());
 
 	// create text control containing the license information
-	wxTextCtrl *license = new wxTextCtrl(aboutPanel, wxID_ANY, wxString::FromUTF8(COPYRIGHT), wxDefaultPosition, wxDefaultSize,
-	                                     wxTE_MULTILINE | wxTE_READONLY);
-	aboutSizer->Add(license, wxSizerFlags(1).Expand().Border(wxALL, padding));
+	aboutSizer->Add(license, wxSizerFlags(1).Expand());
 	// disable the right-click context menu
 	license->Bind(wxEVT_CONTEXT_MENU, [](wxContextMenuEvent &evt) {});
 	// do not show the caret
-	license->Bind(wxEVT_SET_FOCUS, [&](wxFocusEvent &evt) { license->HideNativeCaret(); });
-	// disable copying text (text can still be selected and copy-pasted even when caret is hidden)
-	license->Bind(wxEVT_KEY_DOWN, [](wxKeyEvent) {});
+	license->Bind(wxEVT_SET_FOCUS, [&](wxFocusEvent &evt) { HideCaret(license->GetHWND()); });
+
+	aboutSizer->Add(new wxStaticLine(aboutPanel, wxID_ANY, wxDefaultPosition, wxSize(0, 1)),
+	                wxSizerFlags().Align(wxCENTRE).Expand().Border(wxBOTTOM, padding / 2));
+
+	// add the buttons
+	wxBoxSizer *aboutButtons = new wxBoxSizer(wxHORIZONTAL);
+	wxButton *  github       = new wxButton(aboutPanel, wxID_ANY, wxString::FromUTF8(VIEW_CODE));
+	wxButton *  viewLicense  = new wxButton(aboutPanel, wxID_ANY, wxString::FromUTF8(VIEW_LICENSE_ONLINE));
+	wxButton *  viewExe      = new wxButton(aboutPanel, wxID_ANY, wxString::FromUTF8(VIEW_EXE));
+
+	aboutButtons->AddStretchSpacer();
+	aboutButtons->Add(viewExe, wxSizerFlags());
+	aboutButtons->AddSpacer(padding / 2);
+	aboutButtons->Add(viewLicense, wxSizerFlags());
+	aboutButtons->AddSpacer(padding / 2);
+	aboutButtons->Add(github, wxSizerFlags());
+	aboutButtons->AddSpacer(padding / 2);
+	aboutSizer->Add(aboutButtons, wxSizerFlags().Expand().Border(wxBOTTOM, padding / 2));
+
+	github->Bind(wxEVT_COMMAND_BUTTON_CLICKED, [&](wxCommandEvent &evt) {
+		ShellExecuteA(GetHandle(), NULL, GITHUB_LOCATION, NULL, NULL, SW_NORMAL);
+		evt.Skip();
+	});
+
+	viewLicense->Bind(wxEVT_COMMAND_BUTTON_CLICKED, [&](wxCommandEvent &evt) {
+		ShellExecuteA(GetHandle(), NULL, LICENSE_LOCATION, NULL, NULL, SW_NORMAL);
+		evt.Skip();
+	});
+
+	viewExe->Bind(wxEVT_COMMAND_BUTTON_CLICKED, [&](wxCommandEvent &evt) {
+		ShellExecuteA(GetHandle(), NULL, "explorer.exe", (std::string("/select,") + args.begin()->ToStdString()).c_str(), NULL,
+		              SW_NORMAL);
+		evt.Skip();
+	});
 
 	// show the about dialog
 	aboutPanel->SetSizerAndFit(aboutSizer);

@@ -25,13 +25,13 @@ TrayIcon::TrayIcon(wxFrame *window)
 void TrayIcon::showWindow(wxTaskBarIconEvent &evt) {
 	evt.Skip();
 	if (window) {
-		if (!window->IsShownOnScreen()) {
-			window->Raise();
-			window->Restore();
-			window->Show();
-		} else {
-			window->Show(false);
-		}
+		// if (!window->IsShownOnScreen()) {
+		window->Raise();
+		window->Restore();
+		window->Show();
+		// } else {
+		// 	window->Show(false);
+		// }
 	}
 }
 
@@ -96,12 +96,9 @@ void TrayIcon::abort(wxCommandEvent &evt) {
 
 void TrayIcon::showWindowCommand(wxCommandEvent &evt) {
 	if (window) {
-		window->Show();
-		window->Restore();
 		window->Raise();
-		window->Show();
 		window->Restore();
-		window->Raise();
+		window->Show();
 	}
 }
 
