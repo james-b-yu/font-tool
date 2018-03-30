@@ -12,7 +12,7 @@ compile "/DLANG=1"
 mv ./bin/main.exe ./bin/font-tool-x86-de.exe
 rm ./bin/main.exe.manifest
 
-cygstart -- /bin/bash -c \"upx --best --ultra-brute --overlay=skip ./bin/font-tool-x86_64-en.exe\"
-cygstart -- /bin/bash -c \"upx --best --ultra-brute --overlay=skip ./bin/font-tool-x86_64-de.exe\"
-cygstart -- /bin/bash -c \"upx --best --ultra-brute --overlay=skip ./bin/font-tool-x86-en.exe\"
-cygstart -- /bin/bash -c \"upx --best --ultra-brute --overlay=skip ./bin/font-tool-x86-de.exe\"
+cygstart -- /bin/bash -c \"upx --best --overlay=skip ./bin/font-tool-x86_64-en.exe\"
+cygstart -- /bin/bash -c \"upx --best --overlay=skip ./bin/font-tool-x86_64-de.exe\"
+cygstart -- /bin/bash -c \"upx --best --overlay=skip ./bin/font-tool-x86-en.exe\"
+cygstart -- /bin/bash -c \"upx --best --overlay=skip ./bin/font-tool-x86-de.exe\"

@@ -16,6 +16,8 @@
 
 class Frame : public wxFrame {
   private:
+	// scaling factor for current display
+	double scalingFactor;
 	// window display
 	wxPanel *     panel;      // main panel (for white bg)
 	wxBoxSizer *  topSizer;   // main sizer which contains everything

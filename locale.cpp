@@ -54,7 +54,7 @@
 #define R_A_Files "Remove all files"
 #define R_A_Folders "Remove all folders"
 #define OPEN "Open"
-#define NAME "Font tool"
+#define NAME "Font Tool"
 #define COPYRIGHT_1 "Copyright " YEAR " " CREATOR
 #define COPYRIGHT_2                                                                                                            \
 	"Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated "            \

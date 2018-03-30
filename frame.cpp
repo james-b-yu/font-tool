@@ -29,8 +29,16 @@ END_EVENT_TABLE()
 Frame::Frame(wxString name, wxArrayString args)
     : wxFrame(NULL, wxID_ANY, name)
     , args(args) {
-	SetMaxSize(wxSize(480, 480));
-	SetMinSize(wxSize(480, 240));
+
+	HDC    screen = GetDC(NULL);
+	double hDpi   = GetDeviceCaps(screen, LOGPIXELSX);
+	ReleaseDC(NULL, screen);
+
+	scalingFactor = hDpi / 96;
+
+	SetMaxSize(wxSize(480 * scalingFactor, 480 * scalingFactor));
+	SetMinSize(wxSize(480 * scalingFactor, 240 * scalingFactor));
+	wxPuts(std::to_string(hDpi));
 
 	trayIcon     = new TrayIcon(this);
 	readyMessage = READY;
@@ -63,23 +71,23 @@ Frame::Frame(wxString name, wxArrayString args)
 	fontTreeFailed        = fontTree->AppendItem(fontTreeRoot, wxString::FromUTF8(ERRORS), -1, -1, errors);
 
 	// put components together
-	topSizer->Add(addButtons, wxSizerFlags().Align(wxCENTRE).Border(wxALL, padding).Expand());
-	addButtons->Add(addFontFilesButton, wxSizerFlags(1).Align(wxCENTRE).Border(wxRIGHT, padding));
-	addButtons->Add(addFontFoldersButton, wxSizerFlags().Align(wxCENTRE).Border(wxRIGHT, padding));
-	// addButtons->Add(recursiveSearch, wxSizerFlags(1).Align(wxCENTRE).Border(wxRIGHT, padding));
-	addButtons->Add(removeSelectedButton, wxSizerFlags().Align(wxCENTRE).Border(wxRIGHT, padding));
+	topSizer->Add(addButtons, wxSizerFlags().Align(wxCENTRE).Border(wxALL, padding * scalingFactor).Expand());
+	addButtons->Add(addFontFilesButton, wxSizerFlags(1).Align(wxCENTRE).Border(wxRIGHT, padding * scalingFactor));
+	addButtons->Add(addFontFoldersButton, wxSizerFlags().Align(wxCENTRE).Border(wxRIGHT, padding * scalingFactor));
+	// addButtons->Add(recursiveSearch, wxSizerFlags(1).Align(wxCENTRE).Border(wxRIGHT, padding * scalingFactor));
+	addButtons->Add(removeSelectedButton, wxSizerFlags().Align(wxCENTRE).Border(wxRIGHT, padding * scalingFactor));
 	addButtons->Add(removeAllFontsButton, wxSizerFlags().Align(wxCENTRE));
 
 	topSizer->Add(new wxStaticLine(panel, wxID_ANY, wxDefaultPosition, wxSize(0, 1)), wxSizerFlags().Align(wxCENTRE).Expand());
-	topSizer->Add(fontTree, wxSizerFlags(1).Expand().Border(wxLEFT | wxRIGHT | wxTOP, padding));
+	topSizer->Add(fontTree, wxSizerFlags(1).Expand().Border(wxLEFT | wxRIGHT | wxTOP, padding * scalingFactor));
 	topSizer->Add(statuses, wxSizerFlags().Expand());
 
-	statuses->Add(statusText1, wxSizerFlags(1).Expand().Border(wxLEFT | wxRIGHT, padding));
+	statuses->Add(statusText1, wxSizerFlags(1).Expand().Border(wxLEFT | wxRIGHT, padding * scalingFactor));
 	statuses->Add(new wxStaticLine(panel, wxID_ANY, wxDefaultPosition, wxSize(1, 0)), wxSizerFlags().Align(wxRIGHT).Expand());
-	statuses->Add(statusText3, wxSizerFlags().Border(wxLEFT | wxRIGHT, padding));
+	statuses->Add(statusText3, wxSizerFlags().Border(wxLEFT | wxRIGHT, padding * scalingFactor));
 	errorLine = new wxStaticLine(panel, wxID_ANY, wxDefaultPosition, wxSize(1, 0));
 	statuses->Add(errorLine, wxSizerFlags().Align(wxRIGHT).Expand());
-	statuses->Add(statusText2, wxSizerFlags().Border(wxLEFT | wxRIGHT, padding));
+	statuses->Add(statusText2, wxSizerFlags().Border(wxLEFT | wxRIGHT, padding * scalingFactor));
 	statuses->Show(errorLine, false);
 	statuses->Show(statusText2, false);
 
@@ -922,13 +930,14 @@ void Frame::showAbout(wxCommandEvent &evt) {
 	evt.Skip();
 
 	// initialize the about dialog
-	wxDialog *      aboutDialog = new wxDialog((wxFrame *) this, wxID_ANY, wxString::FromUTF8(ABOUT_NAME));
+	wxDialog *      aboutDialog = new wxDialog((wxFrame *) this, wxID_ANY, wxString::FromUTF8(ABOUT_NAME), wxDefaultPosition,
+                                         wxSize(420 * scalingFactor, 240 * scalingFactor));
 	wxPanel *       aboutPanel  = new wxPanel(aboutDialog);
 	wxBoxSizer *    aboutSizer  = new wxBoxSizer(wxVERTICAL);
 	wxRichTextCtrl *license     = new wxRichTextCtrl(aboutPanel, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize,
                                                  wxRE_MULTILINE | wxRE_READONLY | wxNO_BORDER);
-	license->SetMargins(padding);
-	license->BeginParagraphSpacing(padding, padding);
+	license->SetMargins(padding * scalingFactor);
+	license->BeginParagraphSpacing(padding * scalingFactor, padding * scalingFactor);
 	license->AddParagraph(wxString::FromUTF8(COPYRIGHT_1));
 	license->AddParagraph(wxString::FromUTF8(COPYRIGHT_2));
 	license->AddParagraph(wxString::FromUTF8(COPYRIGHT_3));
@@ -949,7 +958,10 @@ void Frame::showAbout(wxCommandEvent &evt) {
 	// add the items to the dialog
 	aboutSizer->Add(
 	    new wxStaticText(aboutPanel, wxID_ANY, wxString::FromUTF8(VERSION " " SERVER_FILE_NAME " (" __TIMESTAMP__ ")")),
-	    wxSizerFlags().Align(wxCENTRE).Border(wxLEFT | wxRIGHT, padding).Border(wxTOP | wxBOTTOM, padding / 2));
+	    wxSizerFlags()
+	        .Align(wxCENTRE)
+	        .Border(wxLEFT | wxRIGHT, padding * scalingFactor)
+	        .Border(wxTOP | wxBOTTOM, padding * scalingFactor / 2));
 	aboutSizer->Add(new wxStaticLine(aboutPanel, wxID_ANY, wxDefaultPosition, wxSize(0, 1)),
 	                wxSizerFlags().Align(wxCENTRE).Expand());
 
@@ -961,7 +973,7 @@ void Frame::showAbout(wxCommandEvent &evt) {
 	license->Bind(wxEVT_SET_FOCUS, [&](wxFocusEvent &evt) { HideCaret(license->GetHWND()); });
 
 	aboutSizer->Add(new wxStaticLine(aboutPanel, wxID_ANY, wxDefaultPosition, wxSize(0, 1)),
-	                wxSizerFlags().Align(wxCENTRE).Expand().Border(wxBOTTOM, padding / 2));
+	                wxSizerFlags().Align(wxCENTRE).Expand().Border(wxBOTTOM, padding * scalingFactor / 2));
 
 	// add the buttons
 	wxBoxSizer *aboutButtons = new wxBoxSizer(wxHORIZONTAL);
@@ -971,12 +983,12 @@ void Frame::showAbout(wxCommandEvent &evt) {
 
 	aboutButtons->AddStretchSpacer();
 	aboutButtons->Add(viewExe, wxSizerFlags());
-	aboutButtons->AddSpacer(padding / 2);
+	aboutButtons->AddSpacer(padding * scalingFactor / 2);
 	aboutButtons->Add(viewLicense, wxSizerFlags());
-	aboutButtons->AddSpacer(padding / 2);
+	aboutButtons->AddSpacer(padding * scalingFactor / 2);
 	aboutButtons->Add(github, wxSizerFlags());
-	aboutButtons->AddSpacer(padding / 2);
-	aboutSizer->Add(aboutButtons, wxSizerFlags().Expand().Border(wxBOTTOM, padding / 2));
+	aboutButtons->AddSpacer(padding * scalingFactor / 2);
+	aboutSizer->Add(aboutButtons, wxSizerFlags().Expand().Border(wxBOTTOM, padding * scalingFactor / 2));
 
 	github->Bind(wxEVT_COMMAND_BUTTON_CLICKED, [&](wxCommandEvent &evt) {
 		ShellExecuteA(GetHandle(), NULL, GITHUB_LOCATION, NULL, NULL, SW_NORMAL);
@@ -995,7 +1007,7 @@ void Frame::showAbout(wxCommandEvent &evt) {
 	});
 
 	// show the about dialog
-	aboutPanel->SetSizerAndFit(aboutSizer);
+	aboutPanel->SetSizer(aboutSizer);
 	aboutDialog->ShowModal();
 
 	delete aboutDialog;
