@@ -39,17 +39,17 @@ wxMenu *TrayIcon::CreatePopupMenu() {
 	wxMenu *    menu  = new wxMenu();
 	wxMenuItem *title = new wxMenuItem(menu, wxID_HOME);
 
+	wxFont font = window->GetFont();
+	font.SetWeight(wxFONTWEIGHT_BOLD);
+	title->SetFont(font);
+
 	if (window) {
 		if (((Frame *) window)->busy)
 			title->SetItemLabel(wxString::FromUTF8(BUSY_NAME));
-		else if (((Frame *) window)->updatePending)
-			title->SetItemLabel(UPDATE_AVAILABLE_NAME);
+		else if (((Frame *) window)->updateAvailable)
+			title->SetItemLabel(wxString::FromUTF8(UPDATE_AVAILABLE_NAME));
 		else
 			title->SetItemLabel(wxString::FromUTF8(NAME));
-
-		wxFont font = window->GetFont();
-		font.SetWeight(wxFONTWEIGHT_BOLD);
-		title->SetFont(font);
 	}
 
 	menu->Append(title);
@@ -57,12 +57,29 @@ wxMenu *TrayIcon::CreatePopupMenu() {
 	menu->Append(wxID_ABOUT, wxString::FromUTF8(INFORMATION));
 
 	if (window && !((Frame *) window)->busy) {
-		menu->Append(wxID_FILE1, wxString::FromUTF8(A_FONT_FILES));
-		menu->Append(wxID_FILE2, wxString::FromUTF8(A_FONT_FOLDERS));
-		menu->Append(wxID_CLOSE_FRAME, wxString::FromUTF8(CLOSE));
+		// if an update is available, display the update item at the bottom
+		if (((Frame *) window)->updateAvailable) {
+			menu->Append(wxID_FILE1, wxString::FromUTF8(A_FONT_FILES));
+			menu->Append(wxID_FILE2, wxString::FromUTF8(A_FONT_FOLDERS));
+			menu->Append(wxID_CLOSE_FRAME, wxString::FromUTF8(CLOSE));
+		}
 
-		if (!((Frame *) window)->updatePending)
-			menu->Append(wxID_FILE3, wxString::FromUTF8(UPDATE));
+		// if the application is not already updated, display the update menu item
+		if (!((Frame *) window)->updated) {
+			wxMenuItem *updateMenu = new wxMenuItem(menu, wxID_FILE3, UPDATE);
+			// if an update is available, make the update item bold
+			if (((Frame *) window)->updateAvailable)
+				updateMenu->SetFont(font);
+
+			menu->Append(updateMenu);
+		}
+
+		// if an update is not available, display the update item below the about item
+		if (!((Frame *) window)->updateAvailable) {
+			menu->Append(wxID_FILE1, wxString::FromUTF8(A_FONT_FILES));
+			menu->Append(wxID_FILE2, wxString::FromUTF8(A_FONT_FOLDERS));
+			menu->Append(wxID_CLOSE_FRAME, wxString::FromUTF8(CLOSE));
+		}
 	} else {
 		menu->Append(wxID_ABORT, wxString::FromUTF8(DESTROY));
 	}

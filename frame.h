@@ -125,7 +125,8 @@ class Frame : public wxFrame {
 	void showAbout(wxCommandEvent &evt);
 
 	bool busy;
-	bool updatePending = false;
+	bool updateAvailable = false;
+	bool updated         = false;
 
 	Frame(wxString name, wxArrayString args);
 	~Frame();

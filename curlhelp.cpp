@@ -1,4 +1,5 @@
 #include <curl/curl.h>
+#include <string>
 
 class CURLHelper {
   private:
@@ -37,10 +38,10 @@ class CURLHelper {
 	}
 
   public:
-	static char *GetUrlStringContents(const char *url,
-	                                  CURLcode *  res = 0) { // define function to return url contents as a string
-		CURL *   curl = curl_easy_init();
-		string   s;
+	static std::string GetUrlStringContents(const char *url,
+	                                        CURLcode *  res = 0) { // define function to return url contents as a string
+		CURL *         curl = curl_easy_init();
+		string         s;
 
 		if (!res)
 			res = new CURLcode;
@@ -51,16 +52,15 @@ class CURLHelper {
 			curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writefuncstr);
 			curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, true);
 			curl_easy_setopt(curl, CURLOPT_WRITEDATA, &s);
+			curl_easy_setopt(curl, CURLOPT_FAILONERROR, true);
 			*res = curl_easy_perform(curl);
 			curl_easy_cleanup(curl);
 		}
 
-		char *   contents = (char *) malloc(s.len);
-		strcpy(contents, s.ptr);
-
+		std::string    ret(s.ptr);
 		free(s.ptr);
 
-		return contents;
+		return ret;
 	}
 
 	static void SaveUrlContents(const char *url, const char *file,
@@ -76,6 +76,7 @@ class CURLHelper {
 			curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writefuncfile);
 			curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, true);
 			curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
+			curl_easy_setopt(curl, CURLOPT_FAILONERROR, true);
 			*res = curl_easy_perform(curl);
 			curl_easy_cleanup(curl);
 		}

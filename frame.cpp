@@ -10,6 +10,7 @@
 #include <set>
 #include <thread>
 #include <wx/aboutdlg.h>
+#include <wx/sizer.h>
 
 wxDEFINE_EVENT(CLOSE_WINDOW, wxCommandEvent);
 wxDEFINE_EVENT(UPDATE_APPLICATION, wxCommandEvent);
@@ -132,6 +133,27 @@ Frame::Frame(wxString name, wxArrayString args)
 
 	addFontsFromFile();
 	std::thread(&Frame::waitForCompletion, this, false, true).detach();
+
+	// silently check for availability of a new version
+	std::thread([&]() {
+		// get latest version number
+		CURLcode    code;
+		std::string str(CURLHelper::GetUrlStringContents(
+		    "https://raw.githubusercontent.com/fiercedeity-productions/font-tool/master/current-version", &code));
+
+		// if there was an error retrieving the version, exit the function
+		if (code != CURLE_OK)
+			return;
+
+		std::string ins(INTERNAL_VERSION);
+		if (str > ins) { // if a new version is available, show it in the UI
+			updateAvailable = true;
+			readyMessage    = UPDATE_AVAILABLE_MESSAGE;
+			if (!busy)
+				updateStatus(UPDATE_AVAILABLE_MESSAGE);
+		}
+	})
+	    .detach();
 }
 
 Frame::~Frame() {
@@ -896,14 +918,43 @@ void Frame::treeActivated(wxTreeEvent &evt) {
 void Frame::showAbout(wxCommandEvent &evt) {
 	evt.Skip();
 
-	wxAboutDialogInfo info;
-	info.SetName(wxString::FromUTF8(DESC_NAME));
-	info.SetVersion(wxString::FromUTF8(VERSION));
-	info.SetDescription(wxString::FromUTF8(DESC_DESC));
-	info.SetCopyright(wxString::FromUTF8(DESC_COPYRIGHT));
-	Disable();
-	wxAboutBox(info, this);
-	Enable();
+	// wxAboutDialogInfo info;
+	// info.SetName(wxString::FromUTF8(DESC_NAME));
+	// info.SetVersion(wxString::FromUTF8(VERSION));
+	// info.SetDescription(wxString::FromUTF8(DESC_DESC));
+	// info.SetCopyright(wxString::FromUTF8(DESC_COPYRIGHT));
+	// Disable();
+	// wxAboutBox(info, this);
+	// Enable();
+
+	// initialize the about dialog
+	wxDialog *  aboutDialog = new wxDialog((wxFrame *) this, wxID_ANY, wxString::FromUTF8(ABOUT_NAME));
+	wxPanel *   aboutPanel  = new wxPanel(aboutDialog);
+	wxBoxSizer *aboutSizer  = new wxBoxSizer(wxVERTICAL);
+
+	// add the items to the dialog
+	aboutSizer->Add(
+	    new wxStaticText(aboutPanel, wxID_ANY, wxString::FromUTF8(VERSION " " SERVER_FILE_NAME " (" __TIMESTAMP__ ")")),
+	    wxSizerFlags().Align(wxLEFT).Border(wxTOP | wxLEFT | wxRIGHT, padding).Expand());
+	aboutSizer->Add(new wxStaticLine(aboutPanel, wxID_ANY, wxDefaultPosition, wxSize(0, 1)),
+	                wxSizerFlags().Align(wxCENTRE).Expand());
+
+	// create text control containing the license information
+	wxTextCtrl *license = new wxTextCtrl(aboutPanel, wxID_ANY, wxString::FromUTF8(COPYRIGHT), wxDefaultPosition, wxDefaultSize,
+	                                     wxTE_MULTILINE | wxTE_READONLY);
+	aboutSizer->Add(license, wxSizerFlags(1).Expand().Border(wxALL, padding));
+	// disable the right-click context menu
+	license->Bind(wxEVT_CONTEXT_MENU, [](wxContextMenuEvent &evt) {});
+	// do not show the caret
+	license->Bind(wxEVT_SET_FOCUS, [&](wxFocusEvent &evt) { license->HideNativeCaret(); });
+	// disable copying text (text can still be selected and copy-pasted even when caret is hidden)
+	license->Bind(wxEVT_KEY_DOWN, [](wxKeyEvent) {});
+
+	// show the about dialog
+	aboutPanel->SetSizerAndFit(aboutSizer);
+	aboutDialog->ShowModal();
+
+	delete aboutDialog;
 }
 
 void Frame::treeMotion(wxMouseEvent &evt) {
@@ -1006,56 +1057,78 @@ void Frame::updateTest(wxCommandEvent &evt) {
 	evt.Skip();
 	disableControls();
 
+	// check for updates in a new thread, to prevent the GUI from freezing
 	std::thread([&]() {
-		// get latest version number
 		updateStatus(CHECKING_UPDATES "...");
 
+		// get latest version number
 		CURLcode    code;
 		std::string str(CURLHelper::GetUrlStringContents(
 		    "https://raw.githubusercontent.com/fiercedeity-productions/font-tool/master/current-version", &code));
 
+		// if there was an error retrieving the version, exit the function
 		if (code != CURLE_OK) {
 			enableControls();
-			updateStatus(E_UPDATE_INFO);
+			updateStatus(E_UPDATE_INFO " (" + std::to_string(code) + ")"); // display the error code in the message
+
 			std::this_thread::sleep_for(std::chrono::seconds(5));
 			if (!busy)
 				updateStatus(readyMessage);
 			return;
 		}
 
-		if (str.compare(INTERNAL_VERSION) != 0) {
+		// check whether the new version number is greater than the installed version number, then install the new version if
+		// so.
+		std::string ins = INTERNAL_VERSION;
+		if (str > ins) {
 #if LANG == 0
 			updateStatus(DOWNLOADING_VERSION " " + str + "...");
 #elif LANG == 1
 			updateStatus(VERSION_STR " " + str + " " DOWNLOADING "...");
 #endif // LANG == 0
 
+			// download the new version of the binary
 			CURLHelper::SaveUrlContents(
 			    "https://raw.githubusercontent.com/fiercedeity-productions/font-tool/master/bin/" SERVER_FILE_NAME,
 			    "new-" SERVER_FILE_NAME, &code);
 
+			// if there was an error retrieving the version, exit the function
 			if (code != CURLE_OK) {
 				enableControls();
-				updateStatus(E_UPDATE_DOWNLOAD);
+				updateStatus(E_UPDATE_DOWNLOAD " (" + std::to_string(code) + ")"); // display the error code in the message
 				std::this_thread::sleep_for(std::chrono::seconds(5));
 				if (!busy)
 					updateStatus(readyMessage);
 				return;
 			}
 
+			// rename running executable, rename downloaded executable to the original running exectable location. Old
+			// executable will be deleted upon next start
 			boost::filesystem::rename(args.begin()->ToStdString(), args.begin()->ToStdString() + ".old");
 			boost::filesystem::rename("new-" SERVER_FILE_NAME,
 			                          boost::filesystem::path(args.begin()->ToStdString()).filename().string());
 
-			updatePending = true;
 			enableControls();
-			updateStatus(UPDATE_READY);
-			readyMessage = MESSAGE_UPDATED;
+			updateStatus(MESSAGE_UPDATED); // notify user of next change
 
+			// reset updateAvailable status
+			if (updateAvailable) {
+				updateAvailable = false;
+				readyMessage    = READY;
+			}
+
+			updated = true; // prevent another download
 			std::this_thread::sleep_for(std::chrono::seconds(2));
 			if (!busy)
 				updateStatus(readyMessage);
-		} else {
+		} else if (ins > str) { // check whether installed programme is pre-release
+			enableControls();
+			updateStatus(PRERELEASE_VERSION);
+			std::this_thread::sleep_for(std::chrono::seconds(2));
+			if (!busy)
+				updateStatus(readyMessage);
+			return;
+		} else { // otherwise, installed programme is up to date.
 			enableControls();
 			updateStatus(UP_TO_DATE);
 			std::this_thread::sleep_for(std::chrono::seconds(2));
