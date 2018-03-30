@@ -1,4 +1,4 @@
-#define INTERNAL_VERSION "1.1.1"
+#define INTERNAL_VERSION "1.1.4"
 #define CREATOR "James Yu"
 #define YEAR "2017-2018"
 
