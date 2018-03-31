@@ -903,7 +903,7 @@ void Frame::openSelected(wxCommandEvent &evt) {
 }
 
 void Frame::treeActivated(wxTreeEvent &evt) {
-	evt.Skip();
+	// evt.Skip(); // do not skip, as this will trigger activate twice sometimes, and will open folders too.
 
 	wxTreeItemId id = evt.GetItem();
 	if (id.IsOk() && id.m_pItem && id != fontTreeFailed && id != fontTreeFiles && id != fontTreeFolders) {
