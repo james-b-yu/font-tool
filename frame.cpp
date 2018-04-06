@@ -104,6 +104,7 @@ Frame::Frame(wxString name, wxArrayString args)
 	panel->Connect(wxEVT_DROP_FILES, wxDropFilesEventHandler(Frame::handleDroppedFiles), NULL, this);
 
 	Bind(wxEVT_CLOSE_WINDOW, &Frame::onClose, this);
+	Connect(wxID_REMOVE, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(Frame::removeSelected));
 
 	// set styles
 	// SetWindowStyle(wxDEFAULT_FRAME_STYLE & ~(wxMAXIMIZE_BOX));
@@ -823,7 +824,7 @@ void Frame::handleSelectionChanged(wxTreeEvent &evt) {
 }
 
 void Frame::hide(wxIconizeEvent &evt) {
-	Show(false);
+	Hide();
 }
 
 void Frame::treePopupMenu(wxMouseEvent &evt) {
@@ -871,12 +872,11 @@ void Frame::treePopupMenu(wxMouseEvent &evt) {
 				desc = R_A_Folders;
 			menu->Append(wxID_REMOVE, wxString::FromUTF8(desc.c_str()));
 		}
-		Connect(wxID_REMOVE, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(Frame::removeSelected));
 
-		Connect(wxID_REMOVE, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(Frame::removeSelected));
 		if (id != fontTreeFailed && id != fontTreeFiles && id != fontTreeFolders) {
 			TreeEventData *data = new TreeEventData(evt);
 			menu->Append(wxID_OPEN, wxString::FromUTF8(OPEN));
+			Disconnect(wxID_OPEN, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(Frame::openSelected));
 			Connect(wxID_OPEN, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(Frame::openSelected), data);
 		}
 
@@ -1079,12 +1079,15 @@ void Frame::getTreeItemTooltip(wxTreeEvent &evt) {
 
 void Frame::onKey(wxKeyEvent &evt) {
 	evt.Skip();
+	if (busy) // do not do anything if busy
+		return;
 
-	if ((evt.GetKeyCode() == 8 || evt.GetKeyCode() == 127) && !busy) {
+	if ((evt.GetKeyCode() == 8 || evt.GetKeyCode() == 127)) { // if delete or backspace is pressed, remove the selected items
 		wxCommandEvent evt;
 		removeSelected(evt);
 		return;
-	}
+	} else if (evt.GetKeyCode() == 27) // if the esc key is pressed, hide the window
+		Hide();
 }
 
 bool Frame::shouldEnableRemove() {
