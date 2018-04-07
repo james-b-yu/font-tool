@@ -91,6 +91,11 @@
 #define VIEW_CODE "View on GitHub"
 #define VIEW_LICENSE_ONLINE "View license online"
 #define VIEW_EXE "Reveal executable"
+#define RECURSIVE_TOOLTIP "Set whether subfolders are added too."
+#define FONT_FOLDERS_BUTTON_TOOLTIP "Add a folder of fonts."
+#define FONT_FILES_BUTTON_TOOLTIP "Add a font file."
+#define REMOVE_SELECTED_TOOLTIP "Remove selected fonts and folders."
+#define REMOVE_ALL_TOOLTIP "Remove all fonts."
 
 #elif LANG == 1
 #ifdef _M_X64
@@ -174,6 +179,11 @@
 #define VIEW_CODE "Nach GitHub"
 #define VIEW_LICENSE_ONLINE "Lizenz online anzeigen"
 #define VIEW_EXE "Programm zeigen"
+#define RECURSIVE_TOOLTIP "Stell ein, ob Unterordner auch hinzugefügt werden werden."
+#define FONT_FOLDERS_BUTTON_TOOLTIP "Füge einen Schriftordner hinzu."
+#define FONT_FILES_BUTTON_TOOLTIP "Füge eine Schriftdatei hinzu."
+#define REMOVE_SELECTED_TOOLTIP "Entlade die ausgewählten Schriften und Ordner"
+#define REMOVE_ALL_TOOLTIP "Entlade all der Schriften."
 
 #endif // LANG == 0 || 1
 

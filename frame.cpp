@@ -56,7 +56,8 @@ Frame::Frame(wxString name, wxArrayString args)
 	statusText2 = new wxStaticText(panel, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, wxST_ELLIPSIZE_END | wxALIGN_RIGHT);
 	statusText3 = new wxStaticText(panel, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, wxST_ELLIPSIZE_END | wxALIGN_RIGHT);
 	removeSelectedButton = new wxButton(panel, wxID_ANY, wxString::FromUTF8(R));
-	recursiveSearch      = new wxCheckBox(panel, wxID_ANY, wxString::FromUTF8(RECURSIVE), wxDefaultPosition, wxDefaultSize);
+	recursiveSearch =
+	    new wxCheckBox(panel, wxID_ANY, wxString::FromUTF8(RECURSIVE), wxDefaultPosition, wxDefaultSize, wxALIGN_RIGHT);
 
 	fontTree     = new wxTreeCtrl(panel, wxID_FILECTRL, wxDefaultPosition, wxDefaultSize,
                               wxTR_DEFAULT_STYLE | wxTR_HAS_BUTTONS | wxTR_TWIST_BUTTONS | wxTR_NO_LINES |
@@ -72,11 +73,11 @@ Frame::Frame(wxString name, wxArrayString args)
 
 	// put components together
 	topSizer->Add(addButtons, wxSizerFlags().Align(wxCENTRE).Border(wxALL, padding * scalingFactor).Expand());
-	addButtons->Add(addFontFilesButton, wxSizerFlags(1).Align(wxCENTRE).Border(wxRIGHT, padding * scalingFactor));
-	addButtons->Add(addFontFoldersButton, wxSizerFlags().Align(wxCENTRE).Border(wxRIGHT, padding * scalingFactor));
+	addButtons->Add(recursiveSearch, wxSizerFlags().Align(wxCENTRE).Border(wxRIGHT, padding * scalingFactor));
+	addButtons->Add(addFontFoldersButton, wxSizerFlags(1).Align(wxCENTRE).Border(wxRIGHT, padding * scalingFactor));
+	addButtons->Add(addFontFilesButton, wxSizerFlags().Align(wxCENTRE).Border(wxRIGHT, padding * scalingFactor));
 	addButtons->Add(removeSelectedButton, wxSizerFlags().Align(wxCENTRE).Border(wxRIGHT, padding * scalingFactor));
-	addButtons->Add(removeAllFontsButton, wxSizerFlags().Align(wxCENTRE).Border(wxRIGHT, padding * scalingFactor));
-	addButtons->Add(recursiveSearch, wxSizerFlags().Align(wxCENTRE));
+	addButtons->Add(removeAllFontsButton, wxSizerFlags().Align(wxCENTRE));
 
 	topSizer->Add(new wxStaticLine(panel, wxID_ANY, wxDefaultPosition, wxSize(0, 1)), wxSizerFlags().Align(wxCENTRE).Expand());
 	topSizer->Add(fontTree, wxSizerFlags(1).Expand().Border(wxLEFT | wxRIGHT | wxTOP, padding * scalingFactor));
@@ -166,6 +167,13 @@ Frame::Frame(wxString name, wxArrayString args)
 		}
 	})
 	    .detach();
+
+	// set tool tips
+	recursiveSearch->SetToolTip(wxString::FromUTF8(RECURSIVE_TOOLTIP));
+	addFontFoldersButton->SetToolTip(wxString::FromUTF8(FONT_FOLDERS_BUTTON_TOOLTIP));
+	addFontFilesButton->SetToolTip(wxString::FromUTF8(FONT_FILES_BUTTON_TOOLTIP));
+	removeSelectedButton->SetToolTip(wxString::FromUTF8(REMOVE_SELECTED_TOOLTIP));
+	removeAllFontsButton->SetToolTip(wxString::FromUTF8(REMOVE_ALL_TOOLTIP));
 }
 
 Frame::~Frame() {
@@ -1080,8 +1088,9 @@ void Frame::disableControls() {
 	addFontFoldersButton->Disable();
 	removeSelectedButton->Disable();
 	recursiveSearch->Disable();
-	panel->DragAcceptFiles(false);
+	fontTree->Disable();
 
+	panel->DragAcceptFiles(false);
 	EnableCloseButton(false);
 	busy = true;
 }
@@ -1097,6 +1106,7 @@ void Frame::enableControls() {
 	addFontFilesButton->Enable();
 	addFontFoldersButton->Enable();
 	recursiveSearch->Enable();
+	fontTree->Enable();
 
 	if (succeededFontFiles.empty() && failedFontFiles.empty())
 		removeAllFontsButton->Disable();
