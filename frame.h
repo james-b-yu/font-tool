@@ -32,9 +32,9 @@ class Frame : public wxFrame {
 	wxStaticLine *errorLine;
 	bool          errorHidden = true;
 
-	wxButton *removeSelectedButton;
-	// wxCheckBox *       recursiveSearch; // whether recursion is enabled
-	wxTreeCtrl * fontTree; // display of loaded fonts
+	wxButton *   removeSelectedButton;
+	wxCheckBox * recursiveSearch; // whether recursion is enabled
+	wxTreeCtrl * fontTree;        // display of loaded fonts
 	wxTreeItemId fontTreeRoot;
 	wxTreeItemId fontTreeFailed;
 	wxTreeItemId fontTreeFolders;
@@ -99,18 +99,19 @@ class Frame : public wxFrame {
 	std::string status;
 	std::string readyMessage;
 
-	void          updateStatus();
-	void          updateStatus(std::string newStatus);
-	void          hide(wxIconizeEvent &evt);
-	void          treePopupMenu(wxMouseEvent &evt);
-	void          openSelected(wxCommandEvent &evt);
-	void          treeActivated(wxTreeEvent &evt);
-	void          enableControls();
-	void          disableControls();
-	void          getTreeItemTooltip(wxTreeEvent &evt);
-	void          onKey(wxKeyEvent &evt);
-	void          treeMotion(wxMouseEvent &evt);
-	wxArrayString args;
+	void               updateStatus();
+	void               updateStatus(std::string newStatus);
+	void               hide(wxIconizeEvent &evt);
+	void               treePopupMenu(wxMouseEvent &evt);
+	void               openSelected(wxCommandEvent &evt);
+	void               treeActivated(wxTreeEvent &evt);
+	void               enableControls();
+	void               disableControls();
+	void               getTreeItemTooltip(wxTreeEvent &evt);
+	void               onKey(wxKeyEvent &evt);
+	void               treeMotion(wxMouseEvent &evt);
+	wxArrayTreeItemIds getChildren(const wxTreeItemId &parent);
+	wxArrayString      args;
 
 	bool changed = false;
 

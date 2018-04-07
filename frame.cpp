@@ -56,7 +56,7 @@ Frame::Frame(wxString name, wxArrayString args)
 	statusText2 = new wxStaticText(panel, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, wxST_ELLIPSIZE_END | wxALIGN_RIGHT);
 	statusText3 = new wxStaticText(panel, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, wxST_ELLIPSIZE_END | wxALIGN_RIGHT);
 	removeSelectedButton = new wxButton(panel, wxID_ANY, wxString::FromUTF8(R));
-	// recursiveSearch = new wxCheckBox(panel, wxID_ANY, wxString::FromUTF8(RECURSIVE));
+	recursiveSearch      = new wxCheckBox(panel, wxID_ANY, wxString::FromUTF8(RECURSIVE), wxDefaultPosition, wxDefaultSize);
 
 	fontTree     = new wxTreeCtrl(panel, wxID_FILECTRL, wxDefaultPosition, wxDefaultSize,
                               wxTR_DEFAULT_STYLE | wxTR_HAS_BUTTONS | wxTR_TWIST_BUTTONS | wxTR_NO_LINES |
@@ -74,9 +74,9 @@ Frame::Frame(wxString name, wxArrayString args)
 	topSizer->Add(addButtons, wxSizerFlags().Align(wxCENTRE).Border(wxALL, padding * scalingFactor).Expand());
 	addButtons->Add(addFontFilesButton, wxSizerFlags(1).Align(wxCENTRE).Border(wxRIGHT, padding * scalingFactor));
 	addButtons->Add(addFontFoldersButton, wxSizerFlags().Align(wxCENTRE).Border(wxRIGHT, padding * scalingFactor));
-	// addButtons->Add(recursiveSearch, wxSizerFlags(1).Align(wxCENTRE).Border(wxRIGHT, padding * scalingFactor));
 	addButtons->Add(removeSelectedButton, wxSizerFlags().Align(wxCENTRE).Border(wxRIGHT, padding * scalingFactor));
-	addButtons->Add(removeAllFontsButton, wxSizerFlags().Align(wxCENTRE));
+	addButtons->Add(removeAllFontsButton, wxSizerFlags().Align(wxCENTRE).Border(wxRIGHT, padding * scalingFactor));
+	addButtons->Add(recursiveSearch, wxSizerFlags().Align(wxCENTRE));
 
 	topSizer->Add(new wxStaticLine(panel, wxID_ANY, wxDefaultPosition, wxSize(0, 1)), wxSizerFlags().Align(wxCENTRE).Expand());
 	topSizer->Add(fontTree, wxSizerFlags(1).Expand().Border(wxLEFT | wxRIGHT | wxTOP, padding * scalingFactor));
@@ -174,32 +174,53 @@ Frame::~Frame() {
 
 void Frame::waitForCompletion(bool reset, bool loadArgs) {
 	std::unique_lock<std::mutex> lock = std::unique_lock<std::mutex>(m);
-	cv.wait(lock, [&]() { return processCount == 0; });
+	cv.wait(lock, [&]() { return processCount == 0; }); // wait for all running process to stop
 
-	if (reset) {
+	// iterate through folders in the tree view and remove them if they're empty
+	wxTreeItemIdValue  cookie;
+	wxTreeItemId       id = fontTree->GetFirstChild(fontTreeFolders, cookie);
+	wxArrayTreeItemIds idsToRemove;
+
+	while (id.IsOk()) {
+		wxPuts("ok");
+		if (!fontTree->HasChildren(id)) {
+			// fontTree->UnselectItem(id);
+			// fontTree->Delete(id);
+			idsToRemove.Add(id);
+		}
+		id = fontTree->GetNextChild(fontTreeFolders, cookie);
+	}
+
+	for (const wxTreeItemId remove : idsToRemove) {
+		fontTree->UnselectItem(remove);
+		fontTree->Delete(remove);
+	}
+
+	if (reset) { // this is deprecated
 		oldSucceededFontFiles = {};
 		oldFailedFontFiles    = {};
 		failedFontFiles       = {};
 		folders               = {};
 	}
 
-	processRemoveQueue(succeededFontFiles);
+	processRemoveQueue(succeededFontFiles); // remove the fonts from the queue list and from the main list
 
+	// sort the fonts just added
 	std::sort(succeededFontFiles.begin(), succeededFontFiles.end(),
-	          [](const FontInfo &a, const FontInfo &b) -> bool { return a.fileName.compare(b.fileName) < 0; });
+	          [](FontInfo &a, FontInfo &b) -> bool { return a.fileName.compare(b.fileName) < 0; });
 	std::sort(failedFontFiles.begin(), failedFontFiles.end(),
-	          [](const FontInfo &a, const FontInfo &b) -> bool { return a.fileName.compare(b.fileName) < 0; });
+	          [](FontInfo &a, FontInfo &b) -> bool { return a.fileName.compare(b.fileName) < 0; });
 
-	if (loadArgs && args.size() > 0) {
+	if (loadArgs && args.size() > 0) { // add fonts if specified from command line
 		addFontsFromArgs(args);
 		return;
-	} else {
+	} else { // if no args specified, then add to the tree view
 		addToTree();
 		oldFailedFontFiles    = failedFontFiles;
 		oldSucceededFontFiles = succeededFontFiles;
 	}
 
-	if (changed) {
+	if (changed) { // only update the database if things have changed
 		changed = false;
 		statuses->Layout();
 		updateStatus(UPDATING_DATABASE "...");
@@ -247,27 +268,33 @@ void Frame::addFontFilesFromDialog(wxCommandEvent &evt) {
 
 void Frame::addFontFileAsync(std::string path) {
 	// loop through file paths and load them
-	updateStatus(INDEXING "...");
+	processCount++;
+	std::thread([&, path]() {
+		updateStatus(INDEXING "...");
+		try {
+			FontInfo currentFont(path);
 
-	try {
-		FontInfo currentFont(path);
-
-		bool found = false;
-		for (const FontInfo &s : succeededFontFiles) {
-			if (s.path == currentFont.path) {
-				found = true;
-				break;
+			bool found = false;
+			for (FontInfo &s : succeededFontFiles) {
+				if (s == currentFont) {
+					found = true;
+					break;
+				}
 			}
+
+			if (!found) {
+				processCount++;                                           // help for detecting when everything is done
+				std::thread(&Frame::addFont, this, currentFont).detach(); // add font
+			} else {
+				updateStatus();
+			}
+		} catch (...) {
 		}
 
-		if (!found) {
-			processCount++;                                           // help for detecting when everything is done
-			std::thread(&Frame::addFont, this, currentFont).detach(); // add font
-		} else {
-			updateStatus();
-		}
-	} catch (...) {
-	}
+		processCount--;
+		cv.notify_all();
+	})
+	    .detach();
 }
 
 void Frame::addFontsFromArgs(const wxArrayString &args) {
@@ -289,22 +316,23 @@ void Frame::addFontsFromArgs(const wxArrayString &args) {
 }
 
 void Frame::addFontFromInfoAsync(FontInfo currentFont) {
-	try {
-		bool found = false;
-		for (const FontInfo &s : succeededFontFiles) {
-			if (s.path == currentFont.path) {
-				found = true;
-				break;
+	processCount++;
+	std::thread([&, currentFont]() {
+		try {
+			bool found = isInVector(succeededFontFiles, currentFont);
+
+			if (!found) {
+				processCount++;                                           // help for detecting when everything is done
+				std::thread(&Frame::addFont, this, currentFont).detach(); // add font
+			} else {
+				updateStatus();
 			}
+		} catch (...) {
 		}
-		if (!found) {
-			processCount++;                                           // help for detecting when everything is done
-			std::thread(&Frame::addFont, this, currentFont).detach(); // add font
-		} else {
-			updateStatus();
-		}
-	} catch (...) {
-	}
+		processCount--;
+		cv.notify_all();
+	})
+	    .detach();
 }
 
 void Frame::addFontFoldersFromDialog(wxCommandEvent &evt) {
@@ -330,70 +358,94 @@ void Frame::addFontFoldersFromDialog(wxCommandEvent &evt) {
 }
 
 void Frame::addFontFolderAsync(std::string dirPath, std::string folderName) {
-	tbb::concurrent_vector<FontInfo> fontsInFolder;
-	// loop, index and load
-	updateStatus(INDEXING "...");
+	processCount++;
+	std::thread([&, dirPath, folderName]() {
+		tbb::concurrent_vector<FontInfo>    fontsInFolder;
+		tbb::concurrent_vector<std::string> foldersInFolder;
+		tbb::concurrent_vector<FontInfo>    tempFonts;
+		bool                                found = false;
+		updateStatus(INDEXING "...");
 
-	bool failedFolder = true;
+		// loop, index and load
+		bool failedFolder = true;
 
-	for (auto &p : boost::filesystem::directory_iterator(dirPath)) {
-		if (boost::filesystem::is_regular_file(p) && isFontFile(p.path().string()))
-			failedFolder = false,
-			fontsInFolder.emplace_back(boost::filesystem::canonical(p.path()).string(), dirPath, folderName);
-	}
-
-	if (failedFolder) {
-		failedFontFiles.emplace_back(dirPath, dirPath, folderName);
-		return;
-	}
-
-	tbb::concurrent_vector<FontInfo> tempFonts;
-	for (const FontInfo &t : fontsInFolder) {
-		bool found = false;
-		for (FontInfo &l : succeededFontFiles) {
-			if (t.path == l.path && t.folderPath != l.folderPath) {
-				found        = true;
-				l.folderPath = t.folderPath;
-				l.fileName   = t.fileName;
-				l.folder     = t.folder;
+		// use the recursive directory iterator if the recursive checkbox is enabled
+		if (recursiveSearch->IsChecked()) {
+			for (auto &p : boost::filesystem::recursive_directory_iterator(dirPath)) {
+				wxPuts("hello");
+				if (boost::filesystem::is_regular_file(p) && isFontFile(p.path().string()))
+					failedFolder = false,
+					fontsInFolder.emplace_back(boost::filesystem::canonical(p.path()).string(), dirPath, folderName);
+				else if (boost::filesystem::is_directory(p))
+					foldersInFolder.push_back(boost::filesystem::canonical(p.path()).string());
 			}
-
-			for (TreeItemData *&i : ((TreeItemData *) fontTree->GetItemData(fontTreeFiles))->children) {
-				if (i && i->GetId().IsOk() && i->path == l.path) {
-					wxTreeItemId id = i->GetId();
-					i               = 0;
-					fontTree->UnselectItem(id);
-					fontTree->Delete(id);
-				}
-			}
-		}
-
-		if (!found) {
-			tempFonts.push_back(t);
 		} else {
-			changed = true;
+			for (auto &p : boost::filesystem::directory_iterator(dirPath)) {
+				if (boost::filesystem::is_regular_file(p) && isFontFile(p.path().string()))
+					failedFolder = false,
+					fontsInFolder.emplace_back(boost::filesystem::canonical(p.path()).string(), dirPath, folderName);
+			}
 		}
-	}
-	for (FontInfo &f : tempFonts) {
-		try {
-			wxPuts(f.path);
-			bool found = false;
-			for (const FontInfo &s : succeededFontFiles) {
-				if (s.path == f.path) {
-					found = true;
-					break;
+
+		if (failedFolder) {
+			failedFontFiles.emplace_back(dirPath, dirPath, folderName);
+			processCount--;
+			cv.notify_all();
+			return;
+		}
+
+		for (FontInfo &t : fontsInFolder) {
+			for (FontInfo &l : succeededFontFiles) {
+				// copy already-added font properties
+				if (t == l && t.folderPath != l.folderPath && isInVector(foldersInFolder, l.folderPath)) {
+					found        = true;
+					l.folderPath = t.folderPath;
+					l.fileName   = t.fileName;
+					l.folder     = t.folder;
+					l.updateMe   = true;
 				}
 			}
 
-			if (!found) {
-				processCount++;
-				std::thread(&Frame::addFont, this, f).detach();
-			} else {
-				updateStatus();
+			// move font in the tree view
+			wxTreeItemIdValue  cookie;
+			wxTreeItemId       id = fontTree->GetFirstChild(fontTreeFolders, cookie);
+			wxArrayTreeItemIds idsToRemove;
+
+			while (id.IsOk()) {
+				wxPuts("ok");
+				idsToRemove.Add(id);
+				id = fontTree->GetNextChild(fontTreeFolders, cookie);
 			}
-		} catch (...) {
+
+			idsToRemove.Add(fontTreeFiles);
+			for (const wxTreeItemId rem : idsToRemove) {
+				for (const wxTreeItemId &i : getChildren(rem)) {
+					if (i.IsOk() && ((TreeItemData *) fontTree->GetItemData(i))->path == t.path &&
+					    ((TreeItemData *) fontTree->GetItemData(i))->folderPath != t.folderPath) {
+						fontTree->UnselectItem(i);
+						fontTree->Delete(i);
+						found = true;
+					}
+				}
+			}
+
+			tempFonts.push_back(t);
 		}
-	}
+
+		for (FontInfo &f : tempFonts) {
+			try {
+				if (!isInVector(succeededFontFiles, f)) {
+					processCount++;
+					changed = true;
+					std::thread(&Frame::addFont, this, f).detach();
+				}
+			} catch (...) {
+			}
+		}
+		processCount--;
+		cv.notify_all();
+	})
+	    .detach();
 }
 
 bool Frame::addFont(FontInfo &font) {
@@ -527,7 +579,8 @@ void Frame::addToTree() {
 	// fontTree->CollapseAll();
 
 	for (FontInfo &f : succeededFontFiles) {
-		if (!isInVector(oldSucceededFontFiles, f))
+		if (!isInVector(oldSucceededFontFiles, f) || f.updateMe) {
+			f.updateMe = false;
 			if (!f.folder.empty()) {
 				// if font belongs to a folder
 				fontTree->Expand(fontTreeFolders);
@@ -541,7 +594,6 @@ void Frame::addToTree() {
 						TreeItemData *file = new TreeItemData(f.path, false, false, f.folderPath);
 						// add item to folder
 						fontTree->AppendItem(t.id, f.fileName, -1, -1, file), folderExists = true; // NEW
-						((TreeItemData *) fontTree->GetItemData(t.id))->appendChild(file);
 						fontTree->SelectItem(t.id);
 						// fontTree->Expand(t.id);
 					}
@@ -551,25 +603,23 @@ void Frame::addToTree() {
 					TreeItemData *folder = new TreeItemData(f.folder, true, false, f.folderPath);
 					folders.emplace_back(fontTree->AppendItem(fontTreeFolders, f.folder, -1, -1, folder),
 					                     f.folder); // NEW FOLDER
-					((TreeItemData *) fontTree->GetItemData(fontTreeFolders))->appendChild(folder);
 					TreeItemData *file = new TreeItemData(f.path, false, false, f.folderPath);
 					fontTree->AppendItem((folders.end() - 1)->id, f.fileName, -1, -1, file); // NEW
-					((TreeItemData *) fontTree->GetItemData((folders.end() - 1)->id))->appendChild(file);
 					fontTree->SelectItem((folders.end() - 1)->id);
 					// fontTree->Expand((folders.end() - 1)->id);
 				}
 			} else {
 				TreeItemData *file = new TreeItemData(f.path, false, false);
 				fontTree->SelectItem(fontTree->AppendItem(fontTreeFiles, f.fileName, -1, -1, file)); // NEW
-				((TreeItemData *) fontTree->GetItemData(fontTreeFiles))->appendChild(file);
 				fontTree->Expand(fontTreeFiles);
 			}
+		}
 	}
 
 	for (FontInfo &f : failedFontFiles) {
 		bool found = false;
-		for (const FontInfo &o : oldFailedFontFiles) {
-			if (f.path == o.path) {
+		for (FontInfo &o : oldFailedFontFiles) {
+			if (f == o) {
 				found = true;
 				break;
 			}
@@ -578,8 +628,6 @@ void Frame::addToTree() {
 			TreeItemData *errorFile = new TreeItemData(f.path, false, true);
 			fontTree->SelectItem(fontTree->AppendItem(fontTreeFailed, f.fileName, -1, -1, errorFile)); // NEW
 			fontTree->Expand(fontTreeFailed);
-
-			((TreeItemData *) fontTree->GetItemData(fontTreeFailed))->appendChild(errorFile);
 		}
 	}
 
@@ -597,6 +645,7 @@ void Frame::addToTree() {
 }
 
 void Frame::closeOnceDone() {
+	wxPuts("closing once done");
 	std::unique_lock<std::mutex> lock = std::unique_lock<std::mutex>(m);
 	cv.wait(lock, [&]() { return processCount == 0; });
 
@@ -609,6 +658,7 @@ void Frame::closeOnceDone() {
 
 void Frame::onClose(wxCloseEvent &evt) {
 	// evt.Skip();
+	wxPuts("close");
 
 	if (!busy) {
 		evt.StopPropagation();
@@ -689,29 +739,22 @@ void Frame::removeSelected(wxCommandEvent &evt) {
 
 void Frame::handleTreeItem(wxTreeItemId id, bool removeFromTreeToo) {
 	try {
-		if (id.IsOk()) {
+		if (id.IsOk()) { // only remove if item is valid
 			TreeItemData *tritemdata = (TreeItemData *) fontTree->GetItemData(id);
-			if (tritemdata) {
-				if (tritemdata->folder) {
+			if (tritemdata) { // only remove if item is valid
+				wxPuts("handle" + tritemdata->path);
+				if (tritemdata->folder) { // if item is a folder
 					tbb::concurrent_vector<TreeItem> tempFolders;
 					for (TreeItem i : folders) {
 						if (i.id != id)
 							tempFolders.push_back(i);
 					}
-					folders = tempFolders;
+					folders = tempFolders; // remove the item being handled from the folders list
 
-					for (TreeItemData *&child : tritemdata->children) {
-						if (child) {
-							wxTreeItemId id = child->GetId();
-							child           = 0;
-							handleTreeItem(id, removeFromTreeToo);
-						}
-					}
+					for (const wxTreeItemId &child : getChildren(id))
+						handleTreeItem(child, removeFromTreeToo);
 
-					if (tritemdata->path != FOLDERS && tritemdata->path != FILES && tritemdata->path != ERRORS &&
-					    removeFromTreeToo)
-						fontTree->UnselectItem(id), fontTree->Delete(id);
-				} else if (!tritemdata->folder && !tritemdata->error) {
+				} else if (!tritemdata->folder && !tritemdata->error) { // if item is a file
 					oldSucceededFontFiles = succeededFontFiles;
 					processCount++;
 					std::thread(&Frame::removeFont, this,
@@ -719,7 +762,7 @@ void Frame::handleTreeItem(wxTreeItemId id, bool removeFromTreeToo) {
 					    .detach();
 					if (removeFromTreeToo)
 						fontTree->UnselectItem(id), fontTree->Delete(id);
-				} else if (!tritemdata->folder && tritemdata->error) {
+				} else if (!tritemdata->folder && tritemdata->error) { // if item is an error
 					tbb::concurrent_vector<FontInfo> tempFailedFontFiles;
 					for (FontInfo f : failedFontFiles) {
 						if (f.path != tritemdata->path)
@@ -765,10 +808,13 @@ void Frame::addFontsFromFile() {
 	savedFromFile.clear();
 	std::set<std::string> paths;
 	std::string           item;
+
+	// save all lines of database to an std::set
 	while (getline(savedFromFile, item))
 		paths.insert(item);
 
 	for (const std::string &i : paths) {
+		// if not an option, then
 		std::string path       = i.substr(0, i.find_first_of('\t'));
 		std::string folderPath = i.substr(i.find_first_of('\t') + 1);
 		if (boost::filesystem::is_regular_file(path)) {
@@ -820,6 +866,7 @@ void Frame::handleSelectionChanged(wxTreeEvent &evt) {
 			removeSelectedButton->Disable();
 
 		wxPuts("SELECTION CHANGED");
+		wxPuts(std::to_string(((TreeItemData *) fontTree->GetItemData(evt.GetItem()))->folder));
 	}
 }
 
@@ -1032,6 +1079,7 @@ void Frame::disableControls() {
 	removeAllFontsButton->Disable();
 	addFontFoldersButton->Disable();
 	removeSelectedButton->Disable();
+	recursiveSearch->Disable();
 	panel->DragAcceptFiles(false);
 
 	EnableCloseButton(false);
@@ -1048,6 +1096,7 @@ void Frame::enableControls() {
 	busy = false;
 	addFontFilesButton->Enable();
 	addFontFoldersButton->Enable();
+	recursiveSearch->Enable();
 
 	if (succeededFontFiles.empty() && failedFontFiles.empty())
 		removeAllFontsButton->Disable();
@@ -1198,4 +1247,17 @@ void Frame::updateTest(wxCommandEvent &evt) {
 		}
 	})
 	    .detach();
+}
+
+wxArrayTreeItemIds Frame::getChildren(const wxTreeItemId &parent) {
+	wxArrayTreeItemIds children;
+	wxTreeItemIdValue  cookie;
+	wxTreeItemId       id = fontTree->GetFirstChild(parent, cookie);
+
+	while (id.IsOk()) {
+		children.Add(id);
+		id = fontTree->GetNextChild(fontTreeFolders, cookie);
+	}
+
+	return children;
 }

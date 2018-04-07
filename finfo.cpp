@@ -14,7 +14,7 @@ bool FontInfo::operator==(FontInfo &comp) {
 	try {
 		// wxPuts("comp: " + comp.path);
 		// wxPuts("this: " + path);
-		return comp.path == path && comp.folderPath == folderPath;
+		return comp.path == path;
 	} catch (...) {
 		return true;
 	}

@@ -10,12 +10,10 @@ class TreeItemData : public wxTreeItemData {
 	int      _type;
 
   public:
-	bool                                   folder;
-	bool                                   error;
-	std::string                            path;
-	std::string                            folderPath;
-	tbb::concurrent_vector<TreeItemData *> children;
+	bool        folder;
+	bool        error;
+	std::string path;
+	std::string folderPath;
 
 	TreeItemData(std::string path, bool folder, bool error, std::string folderPath = "");
-	void appendChild(TreeItemData *newChild);
 };

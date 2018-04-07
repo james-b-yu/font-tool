@@ -6,7 +6,3 @@ TreeItemData::TreeItemData(std::string path, bool folder, bool error, std::strin
     , error(error)
     , folderPath(folderPath) {
 }
-
-void TreeItemData::appendChild(TreeItemData *newChild) {
-	children.push_back(newChild);
-}
