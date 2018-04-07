@@ -874,7 +874,6 @@ void Frame::handleSelectionChanged(wxTreeEvent &evt) {
 			removeSelectedButton->Disable();
 
 		wxPuts("SELECTION CHANGED");
-		wxPuts(std::to_string(((TreeItemData *) fontTree->GetItemData(evt.GetItem()))->folder));
 	}
 }
 

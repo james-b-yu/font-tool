@@ -1,4 +1,4 @@
-#define INTERNAL_VERSION "1.1.9"
+#define INTERNAL_VERSION "1.1.9e"
 #define CREATOR "James Yu"
 #define YEAR "2017-2018"
 #define GITHUB_LOCATION "https://github.com/fiercedeity-productions/font-tool"
