@@ -1,22 +1,3 @@
-<style>
-@font-face {
-	src: url(https://raw.githubusercontent.com/indestructible-type/indestructible-type.github.io/master/fonts/renner-book-webfont.woff2);
-	font-family: renner;
-	font-style: normal
-}
-
-@font-face {
-	src: url(https://raw.githubusercontent.com/indestructible-type/indestructible-type.github.io/master/fonts/renner-bookitalic-webfont.woff2);
-	font-family: renner;
-	font-style: italic
-}
-
-.main {
-	font-family: renner
-}
-</style>
-
-<div class="main">
 # Font Tool
 ## What?
 Font Tool is a small utility to help people who operate on many workstations use their fonts in a portable way. This removes the necessity of having administrator privileges: the fonts are loaded into memory temporarily and are unloaded once the user logs off or closes the programme. No changes to the disk are made, save for a small `fonts` file which acts as a database to store locations of added fonts.
@@ -85,4 +66,3 @@ Font Tool uses CMake.
 	nmake -NOLOGO
 	```
 1. That's it! A stand-alone executable `FontTool.exe` will be created in the `Build` directory. You can move this file anywhere you want.
-</div>
