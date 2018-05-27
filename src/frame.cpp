@@ -28,7 +28,17 @@ END_EVENT_TABLE()
 
 Frame::Frame(wxString name, wxArrayString args)
     : wxFrame(NULL, wxID_ANY, name)
-    , args(args) {
+    , programmePath(args.begin()->ToStdString()) {
+	// handle arguments
+	bool show = true; // boolean for showing window on start up
+
+	for (auto i = args.begin(); i < args.end(); ++i) {
+		if (*i == "-d" || *i == "--do-not-show" || *i == "--hidden") {
+			show = false;
+		} else { // otherwise add it to the list of files to load
+			startupFiles.push_back(*i);
+		}
+	}
 
 	HDC    screen = GetDC(NULL);
 	double hDpi   = GetDeviceCaps(screen, LOGPIXELSX);
@@ -116,9 +126,13 @@ Frame::Frame(wxString name, wxArrayString args)
 	SetIcon(icon_xpm);
 	panel->SetSizer(topSizer);
 	Centre();
-	Raise();
-	SetFocus();
-	Show();
+
+	// (only of bool show == true)
+	if (show) {
+		Raise();
+		SetFocus();
+		Show();
+	}
 
 	updateStatus(READING_FILESYSTEM "...");
 
@@ -219,8 +233,8 @@ void Frame::waitForCompletion(bool reset, bool loadArgs) {
 	std::sort(failedFontFiles.begin(), failedFontFiles.end(),
 	          [](FontInfo &a, FontInfo &b) -> bool { return a.fileName.compare(b.fileName) < 0; });
 
-	if (loadArgs && args.size() > 0) { // add fonts if specified from command line
-		addFontsFromArgs(args);
+	if (loadArgs) { // add fonts if first time
+		addFontsFromArgs();
 		return;
 	} else { // if no args specified, then add to the tree view
 		addToTree();
@@ -308,8 +322,8 @@ void Frame::addFontFileAsync(std::string path) {
 	    .detach();
 }
 
-void Frame::addFontsFromArgs(const wxArrayString &args) {
-	for (auto i = args.begin() + 1; i != args.end(); ++i) {
+void Frame::addFontsFromArgs() {
+	for (auto i = startupFiles.begin() + 1; i != startupFiles.end(); ++i) {
 		wxPuts(*i);
 		try {
 			std::string path = boost::filesystem::canonical(i->ToStdString()).string();
@@ -318,7 +332,7 @@ void Frame::addFontsFromArgs(const wxArrayString &args) {
 				addFontFolderAsync(path, boost::filesystem::canonical(path).filename().string());
 			else if (boost::filesystem::is_regular_file(path))
 				addFontFileAsync(path);
-		} catch (std::exception &e) {
+		} catch (...) {
 			failedFontFiles.emplace_back(i->ToStdString());
 		}
 	}
@@ -1013,7 +1027,7 @@ void Frame::showAbout(wxCommandEvent &evt) {
 	license->AddParagraph(wxString::FromUTF8(COPYRIGHT_2));
 	license->AddParagraph(wxString::FromUTF8(COPYRIGHT_3));
 	wxFont font = GetFont();
-	font.SetWeight(wxBOLD);
+	font.SetWeight(wxFONTWEIGHT_BOLD);
 	license->BeginFont(font);
 	license->AddParagraph(wxString::FromUTF8(COPYRIGHT_4));
 	license->EndFont();
@@ -1072,8 +1086,7 @@ void Frame::showAbout(wxCommandEvent &evt) {
 	});
 
 	viewExe->Bind(wxEVT_COMMAND_BUTTON_CLICKED, [&](wxCommandEvent &evt) {
-		ShellExecuteA(GetHandle(), NULL, "explorer.exe", (std::string("/select,") + args.begin()->ToStdString()).c_str(), NULL,
-		              SW_NORMAL);
+		ShellExecuteA(GetHandle(), NULL, "explorer.exe", (std::string("/select,") + programmePath).c_str(), NULL, SW_NORMAL);
 		evt.Skip();
 	});
 
@@ -1239,9 +1252,8 @@ void Frame::updateTest(wxCommandEvent &evt) {
 
 			// rename running executable, rename downloaded executable to the original running exectable location. Old
 			// executable will be deleted upon next start
-			boost::filesystem::rename(args.begin()->ToStdString(), args.begin()->ToStdString() + ".old");
-			boost::filesystem::rename("new-" SERVER_FILE_NAME,
-			                          boost::filesystem::path(args.begin()->ToStdString()).filename().string());
+			boost::filesystem::rename(programmePath, programmePath + ".old");
+			boost::filesystem::rename("new-" SERVER_FILE_NAME, boost::filesystem::path(programmePath).filename().string());
 
 			enableControls();
 			updateStatus(MESSAGE_UPDATED); // notify user of next change

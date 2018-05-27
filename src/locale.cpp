@@ -96,6 +96,12 @@
 #define FONT_FILES_BUTTON_TOOLTIP "Add a font file."
 #define REMOVE_SELECTED_TOOLTIP "Remove selected fonts and folders."
 #define REMOVE_ALL_TOOLTIP "Remove all fonts."
+#define CMD_USAGE "Usage:"
+#define CMD_SYNTAX "[OPTION]... [FILE]..."
+#define CMD_HELP                                                                                                               \
+	"A very easy-to-use, portable and friendly font loader.\n\n-d | --do-not-show | --hidden\n\tOpen with a "                  \
+	"hidden window. Useful when opening as a start-up executable.\n\n-h | "                                                    \
+	"--help\n\tDisplay this help message."
 
 #elif LANG == 1
 #ifdef _M_X64
@@ -184,6 +190,12 @@
 #define FONT_FILES_BUTTON_TOOLTIP "Füge eine Schriftdatei hinzu."
 #define REMOVE_SELECTED_TOOLTIP "Entlade die ausgewählten Schriften und Ordner"
 #define REMOVE_ALL_TOOLTIP "Entlade all der Schriften."
+#define CMD_USAGE "Usage:"
+#define CMD_SYNTAX "[OPTION]... [FILE]..."
+#define CMD_HELP                                                                                                               \
+	"A very easy-to-use, portable and friendly font loader.\n\n-d | --do-not-show | --hidden\n\tOpen with a "                  \
+	"hidden window. Useful when opening as a start-up executable.\n\n-h | "                                                    \
+	"--help\n\tDisplay this help message."
 
 #endif // LANG == 0 || 1
 

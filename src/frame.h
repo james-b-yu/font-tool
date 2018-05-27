@@ -76,7 +76,7 @@ class Frame : public wxFrame {
 	tbb::concurrent_vector<TreeItemData *> treeItemDataObjects;
 
 	void addFontsFromFile();
-	void addFontsFromArgs(const wxArrayString &args);
+	void addFontsFromArgs();
 
 	void addFontFileAsync(std::string path);
 	void addFontFolderAsync(std::string dirPath, std::string folderName);
@@ -111,7 +111,8 @@ class Frame : public wxFrame {
 	void               onKey(wxKeyEvent &evt);
 	void               treeMotion(wxMouseEvent &evt);
 	wxArrayTreeItemIds getChildren(const wxTreeItemId &parent);
-	wxArrayString      args;
+	std::string        programmePath;
+	wxArrayString      startupFiles;
 
 	bool changed = false;
 
