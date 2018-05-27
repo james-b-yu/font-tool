@@ -1,0 +1,12 @@
+#include <wx/msw/wx.rc>
+#include "wx/msw/rcdefs.h"
+
+// see "about isolated applications" topic in MSDN
+#ifdef ISOLATION_AWARE_ENABLED
+#define wxMANIFEST_ID 2
+#else
+#define wxMANIFEST_ID 1
+#endif
+
+ApplicationIcon ICON "icon.ico"
+ICONPRG ICON "icon.ico"

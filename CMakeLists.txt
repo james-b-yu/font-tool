@@ -5,8 +5,8 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O1 -Os -MT -MP -fp:fast -D_CRT_SECURE_NO_DEPRECATE
 
 project(FontTool)
 
-file(GLOB HEADERS ${CMAKE_SOURCE_DIR}/*.h)
-file(GLOB SOURCES ${CMAKE_SOURCE_DIR}/*.cpp)
+file(GLOB HEADERS ${CMAKE_SOURCE_DIR}/src/*.h)
+file(GLOB SOURCES ${CMAKE_SOURCE_DIR}/src/*.cpp)
 include_directories(${CMAKE_SOURCE_DIR})
 
 link_libraries(debug wxmsw31ud_core)
@@ -77,5 +77,5 @@ link_libraries(advapi32)
 OPTION(LANG "Setting the language" 0) # Enabled by default
 ADD_DEFINITIONS(-DLANG=${LANG})
 
-add_executable(FontTool ${HEADERS} ${SOURCES} resource.rc)
+add_executable(FontTool ${HEADERS} ${SOURCES} ${CMAKE_SOURCE_DIR}/src/resource.rc)
 set_target_properties(FontTool PROPERTIES LINK_FLAGS_RELEASE "-SUBSYSTEM:WINDOWS -NXCOMPAT -DYNAMICBASE -LTCG")
