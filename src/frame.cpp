@@ -1228,6 +1228,7 @@ void Frame::updateTest(wxCommandEvent &evt) {
 		// check whether the new version number is greater than the installed version number, then install the new version if
 		// so.
 		std::string ins = INTERNAL_VERSION;
+		wxPuts("server: " + str + "\tclient: " + ins);
 		if (str > ins || force) {
 #if LANG == 0
 			updateStatus(DOWNLOADING_VERSION " " + str + "...");
