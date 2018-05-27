@@ -1,3 +1,22 @@
+<style>
+@font-face {
+	src: url(https://raw.githubusercontent.com/indestructible-type/indestructible-type.github.io/master/fonts/renner-book-webfont.woff2);
+	font-family: renner;
+	font-style: normal
+}
+
+@font-face {
+	src: url(https://raw.githubusercontent.com/indestructible-type/indestructible-type.github.io/master/fonts/renner-bookitalic-webfont.woff2);
+	font-family: renner;
+	font-style: italic
+}
+
+.main {
+	font-family: renner
+}
+</style>
+
+<div class="main">
 # Font Tool
 ## What?
 Font Tool is a small utility to help people who operate on many workstations use their fonts in a portable way. This removes the necessity of having administrator privileges: the fonts are loaded into memory temporarily and are unloaded once the user logs off or closes the programme. No changes to the disk are made, save for a small `fonts` file which acts as a database to store locations of added fonts.
@@ -19,7 +38,7 @@ Although the programme is not a font manager (see <a href="#why-not">Why Not?</a
 Font Tool indexes loaded fonts into a database file `fonts` which is stored relative to the executable. The `fonts` file allows for the programme to automatically re-load previously-loaded fonts upon start-up, further increasing the user's productivity if parallelisation was not enough. Of course, this means that Font Tool is partially dependant on a database file to operate as smoothly as possible (see  <a href="#why-not">Why Not?</a>).
 
 ## Who?
-Font Tool is developed by a humble 15-year-old enduring the endless, excruciating struggle of exam preparation. Due to the small nature of the project, compilation takes place through the use of scripts in _shell script_ which call the _MSVC_ compiler. This, of course, is unlike the programme itself, in that it is very <i>un</i>portable. Please feel free to fork this project, convert it to use a MakeFile instead, and request to pull.
+Font Tool is developed by a humble 15-year-old enduring the endless, excruciating struggle of exam preparation. ~~Due to the small nature of the project, compilation takes place through the use of scripts in _shell script_ which call the _MSVC_ compiler. This, of course, is unlike the programme itself, in that it is very <i>un</i>portable. Please feel free to fork this project, convert it to use a MakeFile instead, and request to pull.~~ Font Tool is now using the *CMake* build system. See <a href="#building">Building</a> to build it from source.
 
 ## Why Not?
 Font Tool is no font manager. Font managers include <a href="https://www.neuber.com/typograph/">Typograf</a> and <a href="http://www.xiles.net/">nexusfont</a>, which allow for much more control over already-installed and external fonts. Of course, this leads to a larger executable footprint and a greater difficulty of use, as well as bloaty features not useful for people who simply want to use fonts.
@@ -36,6 +55,34 @@ To get the programme, go to the _releases_ tab in the code view. German versions
 ## Code
 Font Tool is developed in <a href="https://isocpp.org/">C++</a> and C++ only. It relies on <a href="https://www.wxwidgets.org/">WxWidgets</a> to provide it's GUI, <a href="http://www.boost.org/">boost</a> for high-level filesystem functions, <a href="https://curl.haxx.se/">curl</a> to download updates, and <a href="https://www.threadingbuildingblocks.org/">Intel TBB</a> for concurrent vectors. As you can see, the code virtually crying for optimisation.
 
-Compilation is through the use of a compile script. It is run in a _bash_ shell and calls the Microsoft Visual C++ Compiler. Inspect the `compile` script and adapt it to explore how to compile it on your machine.
+~~Compilation is through the use of a compile script. It is run in a _bash_ shell and calls the Microsoft Visual C++ Compiler. Inspect the `compile` script and adapt it to explore how to compile it on your machine.~~ Font Tool is now using the *CMake* build system. See <a href="#building">Building</a> to build it from source.
 
 The German translation is in broken German. It can be compiled by defining `LANG=1` to the pre-processor. Please see `locale.cpp` to help fix all the errors in translation.
+
+## Building
+Font Tool uses CMake.
+1. Gather the prerequisites:
+	1. Intel's <a href="https://www.threadingbuildingblocks.org/">Threading Building Blocks</a>
+	2. <a href="https://www.wxwidgets.org/">WxWidgets</a>
+	3. <a href="http://www.boost.org/">Boost</a> and
+	4. <a href="https://curl.haxx.se/">Curl</a>.
+1. Open an MSVC developer command prompt.
+1. Clone this repository and change directory to it:
+	```bat
+	git clone https://github.com/fiercedeity-productions/font-tool.git && cd font-tool
+	```
+1. Create a `Build` directory:
+	```bat
+	mkdir Build && cd Build
+	```
+1. Run `cmake`:
+	```bat
+	cmake -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Release ..
+	```
+1. If building the German mode, append `-DLANG=1` to the above comand.
+1. Finally, Run `nmake` to compile the code:
+	```bat
+	nmake -NOLOGO
+	```
+1. That's it! A stand-alone executable `FontTool.exe` will be created in the `Build` directory. You can move this file anywhere you want.
+</div>
