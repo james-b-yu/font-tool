@@ -21,6 +21,17 @@ Font Tool indexes loaded fonts into a database file `fonts` which is stored rela
 ## Who?
 Font Tool is developed by a humble 15-year-old enduring the endless, excruciating struggle of exam preparation. ~~Due to the small nature of the project, compilation takes place through the use of scripts in _shell script_ which call the _MSVC_ compiler. This, of course, is unlike the programme itself, in that it is very <i>un</i>portable. Please feel free to fork this project, convert it to use a MakeFile instead, and request to pull.~~ Font Tool is now using the *CMake* build system. See <a href="#building">Building</a> to build it from source.
 
+## Only Windows?
+Font Tool is only available on Windows OSs. The main goal of the utility is to overcome the administrator barrier when installing fonts. However, on most *nix-based operating systems it is nearly trivial to load fonts as a regular user. The user locations for fonts are as follows:
+
+<table>
+<tr><th>OS</th><th>Location</th></tr>
+<tr><td>OSX</td><td><code>~/Library/Fonts/</code></td></tr>
+<tr><td>Linux OSs (Ubuntu, Fedora, Debian, etc and their spin-offs)</td><td><div><code>~/.local/share/fonts</code></div><div><code>~/.fonts</code></div></td></tr>
+</table>
+It is only a matter of moving files into their designated directories for these operating systems. Windows, unlike the above, is the only one to present barriers for free use of fonts. That is why Font Tool was created.
+
+
 ## Why Not?
 Font Tool is no font manager. Font managers include <a href="https://www.neuber.com/typograph/">Typograf</a> and <a href="http://www.xiles.net/">nexusfont</a>, which allow for much more control over already-installed and external fonts. Of course, this leads to a larger executable footprint and a greater difficulty of use, as well as bloaty features not useful for people who simply want to use fonts.
 
@@ -28,7 +39,7 @@ Font Tool is _dumb_! Error handling and font organisation are of minimal existen
 
 Font Tool is _buggy_! Of course, it is created only by a school kid. There are still many ways to achieve `segmentation fault`s even after months of development. Please feel free to debug and fix these issues!
 
-Font Tool is not totally independant. As explained in <a href="#how">How?</a>, Font Tool uses a database file `fonts`. This file can be deleted freely before, during and after the use of the programme, without any adverse effects. However, it is cautioned against modifying the `fonts` file directly as `segmentation fault`s can easily occur due to a lack of validation: the programme expects the `fonts` file to be perfectly formed.
+Font Tool is not totally independent. As explained in <a href="#how">How?</a>, Font Tool uses a database file `fonts`. This file can be deleted freely before, during and after the use of the programme, without any adverse effects. However, it is cautioned against modifying the `fonts` file directly as `segmentation fault`s can easily occur due to a lack of validation: the programme expects the `fonts` file to be perfectly formed.
 
 ## Get
 To get the programme, go to the _releases_ tab in the code view. German versions of the programme are also available.
@@ -60,7 +71,7 @@ Font Tool uses CMake.
 	```bat
 	cmake -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Release ..
 	```
-1. If building the German mode, append `-DLANG=1` to the above comand.
+1. If building the German mode, append `-DLANG=1` to the above command.
 1. Finally, Run `nmake` to compile the code:
 	```bat
 	nmake -NOLOGO
