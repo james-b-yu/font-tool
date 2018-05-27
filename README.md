@@ -12,19 +12,19 @@ One aspect that makes this programme much better for font loading than other fon
 ## How?
 A minimal UI has been created to make it as easy as possible to load and unload fonts. One can load fonts by using the dedicated button, through drag-and-drop onto the window, through drag-and-drop onto the executable, as well as through a menu in the system tray for easy access. This vast array of methods is part of a struggle to make the programme as intuitive to use as possible.
 
-Loaded fonts are convieniently displayed in a tree view and sorted by the  manner in which they were added.
+Loaded fonts are conveniently displayed in a tree view and sorted by the  manner in which they were added.
 
 Although the programme is not a font manager (see <a href="#why-not">Why Not?</a>), it tries to display fonts in folders as they are arranged on the disk. Fonts can be revealed by activating their corresponding item in the tree view.
 
-Font Tool indexes loaded fonts into a database file `fonts` which is stored relative to the executable. The `fonts` file allows for the programme to automatically re-load previously-loaded fonts upon startup, further increasing the user's productivity if parallelisation was not enough. Of course, this means that Font Tool is partially dependant on a database file to operate as smoothly as possible (see  <a href="#why-not">Why Not?</a>).
+Font Tool indexes loaded fonts into a database file `fonts` which is stored relative to the executable. The `fonts` file allows for the programme to automatically re-load previously-loaded fonts upon start-up, further increasing the user's productivity if parallelisation was not enough. Of course, this means that Font Tool is partially dependant on a database file to operate as smoothly as possible (see  <a href="#why-not">Why Not?</a>).
 
 ## Who?
-Font Tool is developed by a humble 15-year-old enduring the endless, excrutiating struggle of exam preparation. Due to the small nature of the project, compilation takes place through the use of scripts in _shell script_ which call the _MSVC_ compiler. This, of course, is unlike the programme itself, in that it is very <i>un</i>portable. Please feel free to fork this project, convert it to use a makefile instead, and request to pull.
+Font Tool is developed by a humble 15-year-old enduring the endless, excrutiating struggle of exam preparation. Due to the small nature of the project, compilation takes place through the use of scripts in _shell script_ which call the _MSVC_ compiler. This, of course, is unlike the programme itself, in that it is very <i>un</i>portable. Please feel free to fork this project, convert it to use a MakeFile instead, and request to pull.
 
 ## Why Not?
 Font Tool is no font manager. Font managers include <a href="https://www.neuber.com/typograph/">Typograf</a> and <a href="http://www.xiles.net/">nexusfont</a>, which allow for much more control over already-installed and external fonts. Of course, this leads to a larger executable footprint and a greater difficulty of use, as well as bloaty features not useful for people who simply want to use fonts.
 
-Font Tool is _dumb_! Error handling and font organisation are of minimal existance. The only way the programme attempts to group fonts is by their folder (if they were added as part of a folder), or whether the font is unable to be loaded. Furthermore, fonts are displayed by their filename, and the software makes no attempt to provide information to do with font contents: no previews, no display of font name, no display of font weight, etc. However, this allows the programme to be as lightweight as possible, and to minimise the amount of time required for use, maximising the time the user actually uses the loaded fonts.
+Font Tool is _dumb_! Error handling and font organisation are of minimal existence. The only way the programme attempts to group fonts is by their folder (if they were added as part of a folder), or whether the font is unable to be loaded. Furthermore, fonts are displayed by their filename, and the software makes no attempt to provide information to do with font contents: no previews, no display of font name, no display of font weight, etc. However, this allows the programme to be as lightweight as possible, and to minimise the amount of time required for use, maximising the time the user actually uses the loaded fonts.
 
 Font Tool is _buggy_! Of course, it is created only by a school kid. There are still many ways to achieve `segmentation fault`s even after months of development. Please feel free to debug and fix these issues!
 
@@ -38,4 +38,4 @@ Font Tool is developed in <a href="https://isocpp.org/">C++</a> and C++ only. It
 
 Compilation is through the use of a compile script. It is run in a _bash_ shell and calls the Microsoft Visual C++ Compiler. Inspect the `compile` script and adapt it to explore how to compile it on your machine.
 
-The German translation is in broken German. It can be compiled by defining `LANG=1` to the preprocessor. Please see `locale.cpp` to help fix all the errors in translation.
+The German translation is in broken German. It can be compiled by defining `LANG=1` to the pre-processor. Please see `locale.cpp` to help fix all the errors in translation.
