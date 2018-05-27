@@ -12,6 +12,7 @@ bool App::OnInit() {
 	wxPuts("Deutsch: " + std::to_string(m_locale.Init(wxLANGUAGE_GERMAN)));
 #endif
 
+	// prevent more than one instance from running
 	m_checker = new wxSingleInstanceChecker;
 	if (m_checker->IsAnotherRunning()) {
 		wxClient *        client = new wxClient;
@@ -26,9 +27,11 @@ bool App::OnInit() {
 	}
 
 	auto path = boost::filesystem::path(argv[0].ToStdString()).parent_path().string();
-	SetCurrentDirectoryA(path.c_str());
+	SetCurrentDirectoryA(
+	    path.c_str()); // make sure that the programme runs in its own parent directory (so fonts folder is not jumbled)
 	wxPuts(path);
 
+	// remove old version of the file (for updates)
 	if (boost::filesystem::is_regular_file(argv[0].ToStdString() + ".old")) {
 		boost::filesystem::remove(argv[0].ToStdString() + ".old");
 	}
@@ -53,7 +56,7 @@ int App::OnExit() {
 	return true;
 }
 
-	// macro to run app in entry point
+// macro to run app in entry point
 
 #ifndef NDEBUG
 IMPLEMENT_APP_CONSOLE(App);
