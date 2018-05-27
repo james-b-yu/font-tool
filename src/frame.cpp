@@ -265,9 +265,12 @@ void Frame::addFontFilesFromDialog(wxCommandEvent &evt) {
 	fontFileDialog.GetPaths(a);
 
 	for (auto &s : a) {
-		std::string path = boost::filesystem::canonical(s.ToStdString()).string();
-		wxPuts(path);
-		addFontFileAsync(path);
+		try {
+			std::string path = boost::filesystem::canonical(s.ToStdString()).string();
+			wxPuts(path);
+			addFontFileAsync(path);
+		} catch (...) {
+		}
 	}
 
 	Enable(); // reenable as window is disabled from the tray
@@ -355,14 +358,17 @@ void Frame::addFontFoldersFromDialog(wxCommandEvent &evt) {
 	}
 
 	disableControls();
-
-	std::string dirPath    = boost::filesystem::canonical(fontDirDialog.GetPath().ToStdString()).string();
-	std::string folderName = boost::filesystem::path(dirPath).filename().string();
-
-	addFontFolderAsync(dirPath, folderName);
-
 	Enable(); // reenable as window is disabled from the tray
-	std::thread(&Frame::waitForCompletion, this, false, false).detach();
+
+	try {
+		std::string dirPath    = boost::filesystem::canonical(fontDirDialog.GetPath().ToStdString()).string();
+		std::string folderName = boost::filesystem::path(dirPath).filename().string();
+
+		addFontFolderAsync(dirPath, folderName);
+		std::thread(&Frame::waitForCompletion, this, false, false).detach();
+	} catch (...) {
+		failedFontFiles.emplace_back(fontDirDialog.GetPath().ToStdString());
+	}
 }
 
 void Frame::addFontFolderAsync(std::string dirPath, std::string folderName) {
@@ -378,21 +384,25 @@ void Frame::addFontFolderAsync(std::string dirPath, std::string folderName) {
 		bool failedFolder = true;
 
 		// use the recursive directory iterator if the recursive checkbox is enabled
-		if (recursiveSearch->IsChecked()) {
-			for (auto &p : boost::filesystem::recursive_directory_iterator(dirPath)) {
-				wxPuts("hello");
-				if (boost::filesystem::is_regular_file(p) && isFontFile(p.path().string()))
-					failedFolder = false,
-					fontsInFolder.emplace_back(boost::filesystem::canonical(p.path()).string(), dirPath, folderName);
-				else if (boost::filesystem::is_directory(p))
-					foldersInFolder.push_back(boost::filesystem::canonical(p.path()).string());
+		try {
+			if (recursiveSearch->IsChecked()) {
+				for (auto &p : boost::filesystem::recursive_directory_iterator(dirPath)) {
+					wxPuts("hello");
+					if (boost::filesystem::is_regular_file(p) && isFontFile(p.path().string()))
+						failedFolder = false,
+						fontsInFolder.emplace_back(boost::filesystem::canonical(p.path()).string(), dirPath, folderName);
+					else if (boost::filesystem::is_directory(p))
+						foldersInFolder.push_back(boost::filesystem::canonical(p.path()).string());
+				}
+			} else {
+				for (auto &p : boost::filesystem::directory_iterator(dirPath)) {
+					if (boost::filesystem::is_regular_file(p) && isFontFile(p.path().string()))
+						failedFolder = false,
+						fontsInFolder.emplace_back(boost::filesystem::canonical(p.path()).string(), dirPath, folderName);
+				}
 			}
-		} else {
-			for (auto &p : boost::filesystem::directory_iterator(dirPath)) {
-				if (boost::filesystem::is_regular_file(p) && isFontFile(p.path().string()))
-					failedFolder = false,
-					fontsInFolder.emplace_back(boost::filesystem::canonical(p.path()).string(), dirPath, folderName);
-			}
+		} catch (...) {
+			failedFolder = true;
 		}
 
 		if (failedFolder) {
@@ -791,17 +801,20 @@ void Frame::save() {
 	saveToFile.open(databasePath, std::iostream::out | std::iostream::trunc);
 	saveToFile.clear();
 
-	for (FontInfo &f : succeededFontFiles) {
-		std::string path       = boost::filesystem::relative(f.path).string();
-		std::string folderPath = boost::filesystem::relative(f.folderPath).string();
+	try {
+		for (FontInfo &f : succeededFontFiles) {
+			std::string path       = boost::filesystem::relative(f.path).string();
+			std::string folderPath = boost::filesystem::relative(f.folderPath).string();
 
-		if (path.empty())
-			path = boost::filesystem::canonical(f.path).string();
-		if (folderPath.empty())
-			folderPath = boost::filesystem::canonical(f.folderPath).string();
+			if (path.empty())
+				path = boost::filesystem::canonical(f.path).string();
+			if (folderPath.empty())
+				folderPath = boost::filesystem::canonical(f.folderPath).string();
 
-		saveToFile << path << "\t" << (f.folderPath.empty() ? "" : folderPath).c_str() << "\n";
-		saveToFile.flush();
+			saveToFile << path << "\t" << (f.folderPath.empty() ? "" : folderPath).c_str() << "\n";
+			saveToFile.flush();
+		}
+	} catch (...) {
 	}
 
 	saveToFile.clear();
@@ -852,12 +865,16 @@ void Frame::handleDroppedFiles(wxDropFilesEvent &evt) {
 		wxASSERT(droppedFiles);
 		for (unsigned long long i = 0; i < evt.GetNumberOfFiles(); i++) {
 			wxPuts(droppedFiles[i]);
-			std::string path = boost::filesystem::canonical(droppedFiles[i].ToStdString()).string();
+			try {
+				std::string path = boost::filesystem::canonical(droppedFiles[i].ToStdString()).string();
 
-			if (boost::filesystem::is_directory(path))
-				addFontFolderAsync(path, boost::filesystem::canonical(path).filename().string());
-			else if (boost::filesystem::is_regular_file(path))
-				addFontFileAsync(path);
+				if (boost::filesystem::is_directory(path))
+					addFontFolderAsync(path, boost::filesystem::canonical(path).filename().string());
+				else if (boost::filesystem::is_regular_file(path))
+					addFontFileAsync(path);
+			} catch (...) {
+				failedFontFiles.emplace_back(droppedFiles[i].ToStdString());
+			}
 		}
 
 		std::thread(&Frame::waitForCompletion, this, false, false).detach();
