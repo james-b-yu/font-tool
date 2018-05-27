@@ -4,13 +4,24 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "Compile",
+			"label": "Build for Debug",
 			"type": "shell",
-			"command": "compile-debug",
+			"command": "mkdir -p Debug && cd Debug && cmake.exe -G \"NMake Makefiles\" -DCMAKE_LINKER=$(cygpath -m $(which link)) -DCMAKE_BUILD_TYPE=Debug .. && nmake",
 			"group": {
 				"kind": "build",
 				"isDefault": true
-			}
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "Build for Release",
+			"type": "shell",
+			"command": "mkdir -p Release && cd Release && cmake.exe -G \"NMake Makefiles\" -DCMAKE_LINKER=$(cygpath -m $(which link)) -DCMAKE_BUILD_TYPE=Release .. && nmake",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"problemMatcher": []
 		},
 		{
 			"label": "Run",

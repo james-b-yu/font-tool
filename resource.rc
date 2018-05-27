@@ -8,13 +8,5 @@
 #define wxMANIFEST_ID 1
 #endif
 
-#if defined(WX_CPU_AMD64)
-wxMANIFEST_ID 24 "wx/msw/amd64.manifest"
-#elif defined(WX_CPU_IA64)
-wxMANIFEST_ID 24 "wx/msw/ia64.manifest"
-#elif defined(WX_CPU_X86)
-wxMANIFEST_ID 24 "wx/msw/wx.manifest"
-#endif
-
 ApplicationIcon ICON "icon.ico"
 ICONPRG ICON "icon.ico"
