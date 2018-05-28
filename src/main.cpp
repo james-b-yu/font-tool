@@ -6,7 +6,9 @@
 #include <vector>
 
 bool App::OnInit() {
+#ifndef __GNUC__
 	SetProcessDPIAware();
+#endif
 #if LANG == 0
 	wxPuts("English: " + std::to_string(m_locale.Init(wxLANGUAGE_ENGLISH_UK)));
 #elif LANG == 1

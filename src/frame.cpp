@@ -300,7 +300,7 @@ void Frame::addFontFilesFromDialog(wxCommandEvent &evt) {
 	std::thread(&Frame::waitForCompletion, this, false, false).detach();
 }
 
-void Frame::addFontFileAsync(std::string path) {
+void Frame::addFontFileAsync(const std::string &path) {
 	// loop through file paths and load them
 	processCount++;
 	std::thread([&, path]() {
@@ -318,7 +318,7 @@ void Frame::addFontFileAsync(std::string path) {
 
 			if (!found) {
 				processCount++;                                           // help for detecting when everything is done
-				std::thread(&Frame::addFont, this, currentFont).detach(); // add font
+				std::thread(&Frame::addFont, this, std::move(currentFont)).detach(); // add font
 			} else {
 				updateStatus();
 			}
@@ -363,7 +363,7 @@ void Frame::addFontsFromArgs() {
 	addFontsFromArgs(startupFiles);
 }
 
-void Frame::addFontFromInfoAsync(FontInfo currentFont) {
+void Frame::addFontFromInfoAsync(const FontInfo &currentFont) {
 	processCount++;
 	std::thread([&, currentFont]() {
 		try {
@@ -410,7 +410,7 @@ void Frame::addFontFoldersFromDialog(wxCommandEvent &evt) {
 	}
 }
 
-void Frame::addFontFolderAsync(std::string dirPath, std::string folderName) {
+void Frame::addFontFolderAsync(const std::string &dirPath, const std::string &folderName) {
 	processCount++;
 	std::thread([&, dirPath, folderName]() {
 		tbb::concurrent_vector<FontInfo>    fontsInFolder;
@@ -505,7 +505,7 @@ void Frame::addFontFolderAsync(std::string dirPath, std::string folderName) {
 	    .detach();
 }
 
-bool Frame::addFont(FontInfo &font) {
+bool Frame::addFont(const FontInfo &font) {
 	bool success;
 	try {
 #if LANG == 0
@@ -554,7 +554,7 @@ void Frame::removeAllFontsWithButton(wxCommandEvent &evt) {
 	std::thread(&Frame::waitForCompletion, this, false, false).detach();
 }
 
-bool Frame::removeFont(FontInfo &font) {
+bool Frame::removeFont(const FontInfo &font) {
 	bool success;
 
 	try {

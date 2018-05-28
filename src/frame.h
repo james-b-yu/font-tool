@@ -78,15 +78,15 @@ class Frame : public wxFrame {
 	void addFontsFromFile();
 	void addFontsFromArgs();
 
-	void addFontFileAsync(std::string path);
-	void addFontFolderAsync(std::string dirPath, std::string folderName);
-	void addFontFromInfoAsync(FontInfo currentFont);
+	void addFontFileAsync(const std::string &path);
+	void addFontFolderAsync(const std::string &dirPath, const std::string &folderName);
+	void addFontFromInfoAsync(const FontInfo &currentFont);
 
-	bool addFont(FontInfo &font);
+	bool addFont(const FontInfo &font);
 
 	void handleDroppedFiles(wxDropFilesEvent &evt);
 	void removeAllFontsWithButton(wxCommandEvent &evt);
-	bool removeFont(FontInfo &font);
+	bool removeFont(const FontInfo &font);
 	void closeOnceDone();
 	void destroyOnceDone(wxCommandEvent &evt);
 	void save();
