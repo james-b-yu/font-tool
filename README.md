@@ -18,6 +18,27 @@ Although the programme is not a font manager (see <a href="#why-not">Why Not?</a
 
 Font Tool indexes loaded fonts into a database file `fonts` which is stored relative to the executable. The `fonts` file allows for the programme to automatically re-load previously-loaded fonts upon start-up, further increasing the user's productivity if parallelisation was not enough. Of course, this means that Font Tool is partially dependant on a database file to operate as smoothly as possible (see  <a href="#why-not">Why Not?</a>).
 
+There are also a couple command-line switches available:
+```
+USAGE: [OPTION]... [FILE]...
+A very easy-to-use, portable and friendly font loader.
+	
+-d | --do-not-show | --hidden
+	Open with a hidden window. Useful when
+	opening as a start-up executable.
+	
+-n | --no-tray
+	Do not add a system tray icon. This can be
+	combined with -d for a completely silent
+	background application.
+	
+-s | --supress-updates
+	Disable updates.
+	
+-h | --help
+	Display this help message.
+```
+
 ## Who?
 Font Tool is developed by a humble 15-year-old enduring the endless, excruciating struggle of exam preparation. ~~Due to the small nature of the project, compilation takes place through the use of scripts in _shell script_ which call the _MSVC_ compiler. This, of course, is unlike the programme itself, in that it is very <i>un</i>portable. Please feel free to fork this project, convert it to use a MakeFile instead, and request to pull.~~ Font Tool is now using the *CMake* build system. See <a href="#building">Building</a> to build it from source.
 
