@@ -26,17 +26,21 @@ EVT_ICONIZE(Frame::hide)
 EVT_CHAR_HOOK(Frame::onKey)
 END_EVENT_TABLE()
 
-Frame::Frame(wxString name, wxArrayString args)
+Frame::Frame(wxString name, std::string programmePath, std::vector<std::string> opts, std::vector<std::string> argFiles)
     : wxFrame(NULL, wxID_ANY, name)
-    , programmePath(args.begin()->ToStdString()) {
+    , programmePath(programmePath)
+    , startupFiles(argFiles) {
+
 	// handle arguments
 	bool show = true; // boolean for showing window on start up
 
-	for (auto i = args.begin(); i < args.end(); ++i) {
+	for (auto i = opts.begin(); i < opts.end(); ++i) {
 		if (*i == "-d" || *i == "--do-not-show" || *i == "--hidden") {
 			show = false;
-		} else { // otherwise add it to the list of files to load
-			startupFiles.push_back(*i);
+		} else if (*i == "-n" || *i == "--no-tray") {
+			hideTray = true;
+		} else if (*i == "-s" || *i == "--supress-updates") {
+			supressUpdates = true;
 		}
 	}
 
@@ -50,7 +54,8 @@ Frame::Frame(wxString name, wxArrayString args)
 	SetMinSize(wxSize(480 * scalingFactor, 240 * scalingFactor));
 	wxPuts(std::to_string(hDpi));
 
-	trayIcon     = new TrayIcon(this);
+	if (!hideTray)
+		trayIcon = new TrayIcon(this);
 	readyMessage = READY;
 
 	// define components
@@ -161,26 +166,27 @@ Frame::Frame(wxString name, wxArrayString args)
 	addFontsFromFile();
 	std::thread(&Frame::waitForCompletion, this, false, true).detach();
 
-	// silently check for availability of a new version
-	std::thread([&]() {
-		// get latest version number
-		CURLcode    code;
-		std::string str(CURLHelper::GetUrlStringContents(
-		    "https://raw.githubusercontent.com/fiercedeity-productions/font-tool/master/current-version", &code));
+	if (!supressUpdates)
+		// silently check for availability of a new version
+		std::thread([&]() {
+			// get latest version number
+			CURLcode    code;
+			std::string str(CURLHelper::GetUrlStringContents(
+			    "https://raw.githubusercontent.com/fiercedeity-productions/font-tool/master/current-version", &code));
 
-		// if there was an error retrieving the version, exit the function
-		if (code != CURLE_OK)
-			return;
+			// if there was an error retrieving the version, exit the function
+			if (code != CURLE_OK)
+				return;
 
-		std::string ins(INTERNAL_VERSION);
-		if (str > ins) { // if a new version is available, show it in the UI
-			updateAvailable = true;
-			readyMessage    = UPDATE_AVAILABLE_MESSAGE;
-			if (!busy)
-				updateStatus(UPDATE_AVAILABLE_MESSAGE);
-		}
-	})
-	    .detach();
+			std::string ins(INTERNAL_VERSION);
+			if (str > ins) { // if a new version is available, show it in the UI
+				updateAvailable = true;
+				readyMessage    = UPDATE_AVAILABLE_MESSAGE;
+				if (!busy)
+					updateStatus(UPDATE_AVAILABLE_MESSAGE);
+			}
+		})
+		    .detach();
 
 	// set tool tips
 	recursiveSearch->SetToolTip(wxString::FromUTF8(RECURSIVE_TOOLTIP));
@@ -191,7 +197,8 @@ Frame::Frame(wxString name, wxArrayString args)
 }
 
 Frame::~Frame() {
-	delete trayIcon;
+	if (!hideTray)
+		delete trayIcon;
 }
 
 void Frame::waitForCompletion(bool reset, bool loadArgs) {
@@ -266,7 +273,8 @@ void Frame::addFontFilesFromDialog(wxCommandEvent &evt) {
 	                       "mmm;*.pfb;*.pfm"),
 	    wxFD_OPEN | wxFD_FILE_MUST_EXIST | wxFD_MULTIPLE);
 	if (fontFileDialog.ShowModal() == wxID_CANCEL) {
-		Enable(); // reenable as window is disabled from the tray
+		if (!hideTray)
+			Enable(); // reenable as window is disabled from the tray
 		updateStatus(readyMessage);
 		return;
 	}
@@ -287,7 +295,8 @@ void Frame::addFontFilesFromDialog(wxCommandEvent &evt) {
 		}
 	}
 
-	Enable(); // reenable as window is disabled from the tray
+	if (!hideTray)
+		Enable(); // reenable as window is disabled from the tray
 	std::thread(&Frame::waitForCompletion, this, false, false).detach();
 }
 
@@ -322,22 +331,36 @@ void Frame::addFontFileAsync(std::string path) {
 	    .detach();
 }
 
-void Frame::addFontsFromArgs() {
-	for (auto i = startupFiles.begin() + 1; i != startupFiles.end(); ++i) {
+void Frame::addFontsFromArgs(std::vector<std::string> args) {
+	wxPuts("hi");
+	// remove duplicates
+	std::set<std::string> files;
+	for (auto i = args.begin(); i != args.end(); ++i) {
 		wxPuts(*i);
 		try {
-			std::string path = boost::filesystem::canonical(i->ToStdString()).string();
+			files.insert(boost::filesystem::canonical(*i).string());
+		} catch (...) {
+			failedFontFiles.emplace_back(*i);
+		}
+	}
 
+	for (std::string path : files) {
+		try {
 			if (boost::filesystem::is_directory(path))
 				addFontFolderAsync(path, boost::filesystem::canonical(path).filename().string());
 			else if (boost::filesystem::is_regular_file(path))
 				addFontFileAsync(path);
+
 		} catch (...) {
-			failedFontFiles.emplace_back(i->ToStdString());
+			failedFontFiles.emplace_back(path);
 		}
 	}
 
 	std::thread(&Frame::waitForCompletion, this, false, false).detach();
+}
+
+void Frame::addFontsFromArgs() {
+	addFontsFromArgs(startupFiles);
 }
 
 void Frame::addFontFromInfoAsync(FontInfo currentFont) {
@@ -366,13 +389,15 @@ void Frame::addFontFoldersFromDialog(wxCommandEvent &evt) {
 	// open folder dialogue
 	wxDirDialog fontDirDialog(this, wxString::FromUTF8(A_FONT_FOLDERS), "%APPDATA%", wxDD_DEFAULT_STYLE | wxDD_DIR_MUST_EXIST);
 	if (fontDirDialog.ShowModal() == wxID_CANCEL) {
-		Enable(); // reenable as window is disabled from the tray
+		if (!hideTray)
+			Enable(); // reenable as window is disabled from the tray
 		updateStatus(readyMessage);
 		return;
 	}
 
 	disableControls();
-	Enable(); // reenable as window is disabled from the tray
+	if (!hideTray)
+		Enable(); // reenable as window is disabled from the tray
 
 	try {
 		std::string dirPath    = boost::filesystem::canonical(fontDirDialog.GetPath().ToStdString()).string();
@@ -684,7 +709,8 @@ void Frame::closeOnceDone() {
 	std::thread(SendMessageA, HWND_BROADCAST, WM_FONTCHANGE, NULL, NULL).detach();
 	updateStatus(ABOUT_TO_CLOSE);
 
-	trayIcon->RemoveIcon();
+	if (!hideTray)
+		trayIcon->RemoveIcon();
 	wxPostEvent(this, wxCommandEvent(CLOSE_WINDOW));
 }
 
@@ -909,7 +935,10 @@ void Frame::handleSelectionChanged(wxTreeEvent &evt) {
 }
 
 void Frame::hide(wxIconizeEvent &evt) {
-	Hide();
+	if (!hideTray)
+		Hide();
+	else
+		Iconize();
 }
 
 void Frame::treePopupMenu(wxMouseEvent &evt) {
@@ -1201,91 +1230,93 @@ void Frame::destroyOnceDone(wxCommandEvent &evt) {
 }
 
 void Frame::updateTest(wxCommandEvent &evt) {
-	evt.Skip();
-	disableControls();
+	if (!supressUpdates) {
+		evt.Skip();
+		disableControls();
 
-	// check for updates in a new thread, to prevent the GUI from freezing
-	std::thread([&]() {
-		bool force = GetAsyncKeyState(VK_SHIFT) == -32767; // holding shift whilst updating forces a download
-		updateStatus(CHECKING_UPDATES "...");
+		// check for updates in a new thread, to prevent the GUI from freezing
+		std::thread([&]() {
+			bool force = GetAsyncKeyState(VK_SHIFT) == -32767; // holding shift whilst updating forces a download
+			updateStatus(CHECKING_UPDATES "...");
 
-		// get latest version number
-		CURLcode    code;
-		std::string str(CURLHelper::GetUrlStringContents(
-		    "https://raw.githubusercontent.com/fiercedeity-productions/font-tool/master/current-version", &code));
-
-		// if there was an error retrieving the version, exit the function
-		if (code != CURLE_OK) {
-			enableControls();
-			updateStatus(E_UPDATE_INFO " (" + std::to_string(code) + ")"); // display the error code in the message
-
-			std::this_thread::sleep_for(std::chrono::seconds(5));
-			if (!busy)
-				updateStatus(readyMessage);
-			return;
-		}
-
-		// check whether the new version number is greater than the installed version number, then install the new version if
-		// so.
-		std::string ins = INTERNAL_VERSION;
-		wxPuts("server: " + str + "\tclient: " + ins);
-		if (str > ins || force) {
-#if LANG == 0
-			updateStatus(DOWNLOADING_VERSION " " + str + "...");
-#elif LANG == 1
-			updateStatus(VERSION_STR " " + str + " " DOWNLOADING "...");
-#endif // LANG == 0
-
-			// download the new version of the binary
-			CURLHelper::SaveUrlContents(
-			    "https://raw.githubusercontent.com/fiercedeity-productions/font-tool/master/bin/" SERVER_FILE_NAME,
-			    "new-" SERVER_FILE_NAME, &code);
+			// get latest version number
+			CURLcode    code;
+			std::string str(CURLHelper::GetUrlStringContents(
+			    "https://raw.githubusercontent.com/fiercedeity-productions/font-tool/master/current-version", &code));
 
 			// if there was an error retrieving the version, exit the function
 			if (code != CURLE_OK) {
 				enableControls();
-				updateStatus(E_UPDATE_DOWNLOAD " (" + std::to_string(code) + ")"); // display the error code in the message
+				updateStatus(E_UPDATE_INFO " (" + std::to_string(code) + ")"); // display the error code in the message
+
 				std::this_thread::sleep_for(std::chrono::seconds(5));
 				if (!busy)
 					updateStatus(readyMessage);
 				return;
 			}
 
-			// rename running executable, rename downloaded executable to the original running exectable location. Old
-			// executable will be deleted upon next start
-			boost::filesystem::rename(programmePath, programmePath + ".old");
-			boost::filesystem::rename("new-" SERVER_FILE_NAME, boost::filesystem::path(programmePath).filename().string());
+			// check whether the new version number is greater than the installed version number, then install the new version
+			// if so.
+			std::string ins = INTERNAL_VERSION;
+			wxPuts("server: " + str + "\tclient: " + ins);
+			if (str > ins || force) {
+#if LANG == 0
+				updateStatus(DOWNLOADING_VERSION " " + str + "...");
+#elif LANG == 1
+				updateStatus(VERSION_STR " " + str + " " DOWNLOADING "...");
+#endif // LANG == 0
 
-			enableControls();
-			updateStatus(MESSAGE_UPDATED); // notify user of next change
+				// download the new version of the binary
+				CURLHelper::SaveUrlContents(
+				    "https://raw.githubusercontent.com/fiercedeity-productions/font-tool/master/bin/" SERVER_FILE_NAME,
+				    "new-" SERVER_FILE_NAME, &code);
 
-			// reset updateAvailable status
-			if (updateAvailable) {
-				updateAvailable = false;
-				readyMessage    = READY;
+				// if there was an error retrieving the version, exit the function
+				if (code != CURLE_OK) {
+					enableControls();
+					updateStatus(E_UPDATE_DOWNLOAD " (" + std::to_string(code) + ")"); // display the error code in the message
+					std::this_thread::sleep_for(std::chrono::seconds(5));
+					if (!busy)
+						updateStatus(readyMessage);
+					return;
+				}
+
+				// rename running executable, rename downloaded executable to the original running exectable location. Old
+				// executable will be deleted upon next start
+				boost::filesystem::rename(programmePath, programmePath + ".old");
+				boost::filesystem::rename("new-" SERVER_FILE_NAME, boost::filesystem::path(programmePath).filename().string());
+
+				enableControls();
+				updateStatus(MESSAGE_UPDATED); // notify user of next change
+
+				// reset updateAvailable status
+				if (updateAvailable) {
+					updateAvailable = false;
+					readyMessage    = READY;
+				}
+
+				updated = true; // prevent another download
+				std::this_thread::sleep_for(std::chrono::seconds(2));
+				if (!busy)
+					updateStatus(readyMessage);
+			} else if (ins > str) { // check whether installed programme is pre-release
+				enableControls();
+				updateStatus(PRERELEASE_VERSION);
+				std::this_thread::sleep_for(std::chrono::seconds(2));
+				if (!busy)
+					updateStatus(readyMessage);
+				return;
+			} else { // otherwise, installed programme is up to date.
+				enableControls();
+				updateStatus(UP_TO_DATE);
+				std::this_thread::sleep_for(std::chrono::seconds(2));
+				if (!busy)
+					updateStatus(readyMessage);
+				return;
 			}
-
-			updated = true; // prevent another download
-			std::this_thread::sleep_for(std::chrono::seconds(2));
-			if (!busy)
-				updateStatus(readyMessage);
-		} else if (ins > str) { // check whether installed programme is pre-release
-			enableControls();
-			updateStatus(PRERELEASE_VERSION);
-			std::this_thread::sleep_for(std::chrono::seconds(2));
-			if (!busy)
-				updateStatus(readyMessage);
-			return;
-		} else { // otherwise, installed programme is up to date.
-			enableControls();
-			updateStatus(UP_TO_DATE);
-			std::this_thread::sleep_for(std::chrono::seconds(2));
-			if (!busy)
-				updateStatus(readyMessage);
-			return;
-		}
-	})
-	    .detach();
+		})
+		    .detach();
+	}
 }
 
 wxArrayTreeItemIds Frame::getChildren(const wxTreeItemId &parent) {

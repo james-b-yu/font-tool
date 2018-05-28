@@ -17,7 +17,8 @@ TrayIcon::TrayIcon(wxFrame *window)
 	Connect(wxID_ABOUT, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(TrayIcon::showAbout));
 	Connect(wxID_FILE1, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(TrayIcon::addFontFiles));
 	Connect(wxID_FILE2, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(TrayIcon::addFontFolders));
-	Connect(wxID_FILE3, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(TrayIcon::update));
+	if (window && !((Frame *) window)->supressUpdates)
+		Connect(wxID_FILE3, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(TrayIcon::update));
 	Connect(wxID_CLOSE_FRAME, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(TrayIcon::closeFrame));
 	Connect(wxID_ABORT, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(TrayIcon::abort));
 }
@@ -65,7 +66,7 @@ wxMenu *TrayIcon::CreatePopupMenu() {
 		}
 
 		// if the application is not already updated, display the update menu item
-		if (!((Frame *) window)->updated) {
+		if (!((Frame *) window)->updated && !((Frame *) window)->supressUpdates) {
 			wxMenuItem *updateMenu = new wxMenuItem(menu, wxID_FILE3, UPDATE);
 			// if an update is available, make the update item bold
 			if (((Frame *) window)->updateAvailable)

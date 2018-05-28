@@ -6,6 +6,9 @@
 #include <wx/wx.h>
 
 class Connection : public wxConnection {
+  public:
+	static std::vector<std::string> filesToBeAdded; // temporary storage vector
+
   protected:
 	bool OnExec(const wxString &topic, const wxString &data);
 };

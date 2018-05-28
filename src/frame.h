@@ -99,22 +99,23 @@ class Frame : public wxFrame {
 	std::string status;
 	std::string readyMessage;
 
-	void               updateStatus();
-	void               updateStatus(std::string newStatus);
-	void               hide(wxIconizeEvent &evt);
-	void               treePopupMenu(wxMouseEvent &evt);
-	void               openSelected(wxCommandEvent &evt);
-	void               treeActivated(wxTreeEvent &evt);
-	void               enableControls();
-	void               disableControls();
-	void               getTreeItemTooltip(wxTreeEvent &evt);
-	void               onKey(wxKeyEvent &evt);
-	void               treeMotion(wxMouseEvent &evt);
-	wxArrayTreeItemIds getChildren(const wxTreeItemId &parent);
-	std::string        programmePath;
-	wxArrayString      startupFiles;
+	void                     updateStatus();
+	void                     updateStatus(std::string newStatus);
+	void                     hide(wxIconizeEvent &evt);
+	void                     treePopupMenu(wxMouseEvent &evt);
+	void                     openSelected(wxCommandEvent &evt);
+	void                     treeActivated(wxTreeEvent &evt);
+	void                     enableControls();
+	void                     disableControls();
+	void                     getTreeItemTooltip(wxTreeEvent &evt);
+	void                     onKey(wxKeyEvent &evt);
+	void                     treeMotion(wxMouseEvent &evt);
+	wxArrayTreeItemIds       getChildren(const wxTreeItemId &parent);
+	std::string              programmePath;
+	std::vector<std::string> startupFiles;
 
-	bool changed = false;
+	bool changed  = false;
+	bool hideTray = false;
 
 	void updateTest(wxCommandEvent &evt);
 	bool shouldEnableRemove();
@@ -124,14 +125,17 @@ class Frame : public wxFrame {
 
   public:
 	void onClose(wxCloseEvent &evt);
+	void showAbout(wxCommandEvent &evt);
+
 	void addFontFilesFromDialog(wxCommandEvent &evt);
 	void addFontFoldersFromDialog(wxCommandEvent &evt);
-	void showAbout(wxCommandEvent &evt);
+	void addFontsFromArgs(std::vector<std::string> args);
 
 	bool busy;
 	bool updateAvailable = false;
 	bool updated         = false;
+	bool supressUpdates  = false;
 
-	Frame(wxString name, wxArrayString args);
+	Frame(wxString name, std::string programmePath, std::vector<std::string> opts, std::vector<std::string> argFiles);
 	~Frame();
 };

@@ -1,4 +1,4 @@
-#define INTERNAL_VERSION "1.2.0"
+#define INTERNAL_VERSION "1.2.1"
 #define CREATOR "James Yu"
 #define YEAR "2017-2018"
 #define GITHUB_LOCATION "https://github.com/fiercedeity-productions/font-tool"
@@ -100,7 +100,9 @@
 #define CMD_SYNTAX "[OPTION]... [FILE]..."
 #define CMD_HELP                                                                                                               \
 	"A very easy-to-use, portable and friendly font loader.\n\n-d | --do-not-show | --hidden\n\tOpen with a "                  \
-	"hidden window. Useful when opening as a start-up executable.\n\n-h | "                                                    \
+	"hidden window. Useful when opening as a start-up executable.\n\n-n | --no-tray\n\tDo not add a system tray icon. This "   \
+	"can be combined with -d for a completely silent background application.\n\n-s | --supress-updates\n\tDisable "            \
+	"updates.\n\n-h | "                                                                                                        \
 	"--help\n\tDisplay this help message."
 
 #elif LANG == 1
@@ -194,7 +196,9 @@
 #define CMD_SYNTAX "[OPTION]... [FILE]..."
 #define CMD_HELP                                                                                                               \
 	"A very easy-to-use, portable and friendly font loader.\n\n-d | --do-not-show | --hidden\n\tOpen with a "                  \
-	"hidden window. Useful when opening as a start-up executable.\n\n-h | "                                                    \
+	"hidden window. Useful when opening as a start-up executable.\n\n-n | --no-tray\n\tDo not add a system tray icon. This "   \
+	"can be combined with -d for a completely silent background application.\n\n-s | --supress-updates\n\tDisable "            \
+	"updates.\n\n-h | "                                                                                                        \
 	"--help\n\tDisplay this help message."
 
 #endif // LANG == 0 || 1

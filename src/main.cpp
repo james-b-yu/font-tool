@@ -1,30 +1,11 @@
 #include "main.h"
 #include "locale.cpp"
 #include <boost/filesystem.hpp>
+#include <regex>
 #include <thread>
 #include <vector>
 
 bool App::OnInit() {
-	bool startHidden = false;
-
-	// check whether the user is requesting help, and whether to raise an existing instance
-	for (int i = 0; i < argc; i++) {
-		const wxString &c = argv[i];
-
-		if ((c.ToStdString() == "--help" || c.ToStdString() == "-h" || c.ToStdString() == "--h") &&
-		    AttachConsole(ATTACH_PARENT_PROCESS)) { // if requesting for help, display help and exit
-			std::string helpText = CMD_USAGE " " + boost::filesystem::path(argv[0].ToStdString()).filename().string() +
-			                       " " CMD_SYNTAX + "\n" + CMD_HELP + "\n";
-
-			DWORD nw;
-			WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), helpText.c_str(), helpText.length(), &nw, NULL);
-			FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
-			return false;
-		} else if (c == "-d" || c == "--do-not-show" || c == "--hidden") { // save whether it is hidden or not
-			startHidden = true;
-		}
-	}
-
 	SetProcessDPIAware();
 #if LANG == 0
 	wxPuts("English: " + std::to_string(m_locale.Init(wxLANGUAGE_ENGLISH_UK)));
@@ -32,16 +13,74 @@ bool App::OnInit() {
 	wxPuts("Deutsch: " + std::to_string(m_locale.Init(wxLANGUAGE_GERMAN)));
 #endif
 
+	bool                     doNotRaise = false; // only used if there is an existing process
+	std::vector<std::string> options;
+	std::vector<std::string> argFiles;
+
+	// a console if the programme is being started from the command line
+
+	if (argc > 1) {
+		AttachConsole(ATTACH_PARENT_PROCESS); // if in release, a console will not appear. This line is needed to attach to
+
+		for (int i = 1; i < argc; i++) {                  // start iterating from index 1 as index 0 is the executable path
+			const std::string &c = argv[i].ToStdString(); // get a reference to the current element being handled
+
+			// check whether the user is requesting help, and whether to raise an existing instance
+			if ((c == "--help" ||
+			     std::regex_match(c.begin(), c.end(),
+			                      std::regex("^-\\w*h\\w*$")))) { // if requesting for help, display help and exit
+				std::string helpText = CMD_USAGE " " + boost::filesystem::path(argv[0].ToStdString()).filename().string() +
+				                       " " CMD_SYNTAX + "\n" + CMD_HELP + "\n";
+
+				DWORD nw;
+				WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), helpText.c_str(), helpText.length(), &nw, NULL);
+				FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
+				return false;
+			} else if (std::regex_match(c.begin(), c.end(),
+			                            std::regex("^-\\w+$"))) { // if a short-hand version of an argument (like -d, -nd, -sn)
+				std::string body = c.substr(1);
+				for (char c : body)
+					options.push_back(std::string("-") + c);
+			} else if (std::regex_match(c.begin(), c.end(),
+			                            std::regex("^--\\w[-|\\w]+$"))) { // if a long-hand version like --supress-updates
+				options.push_back(c);
+			} else
+				argFiles.push_back(c);
+
+			if (c == "-d" || c == "--do-not-show" || c == "--hidden") { // save whether it is hidden or not
+				doNotRaise = true;
+			}
+		}
+	}
+
 	// prevent more than one instance from running
 	m_checker = new wxSingleInstanceChecker;
 	if (m_checker->IsAnotherRunning()) {
-		if (!startHidden) { // raise it if "-d" is not specified
+		if (!doNotRaise) { // raise it if "-d" is not specified
 			wxClient *        client = new wxClient;
-			wxConnectionBase *base   = client->MakeConnection("localhost", "/tmp/socket", "topic");
+			wxConnectionBase *base   = client->MakeConnection("localhost", "/tmp/socket", "raise");
 			base->Execute("raise");
 			delete base;
 			delete client;
 		}
+
+		// tell the existing instance to load the files specified in the arguments
+		wxClient *        clientAdd = new wxClient;
+		wxConnectionBase *baseAdd   = clientAdd->MakeConnection("localhost", "/tmp/socket", "addToList");
+
+		for (auto i : argFiles)
+			baseAdd->Execute(i);
+
+		delete baseAdd;
+		delete clientAdd;
+
+		wxClient *        clientPush = new wxClient;
+		wxConnectionBase *basePush   = clientPush->MakeConnection("localhost", "/tmp/socket", "push");
+
+		basePush->Execute("push");
+
+		delete basePush;
+		delete clientPush;
 
 		delete m_checker;
 		m_checker = nullptr;
@@ -59,7 +98,7 @@ bool App::OnInit() {
 	}
 
 	// create a frame
-	frame = new Frame(wxString::FromUTF8(NAME), argv.GetArguments());
+	frame = new Frame(wxString::FromUTF8(NAME), argv.GetArguments()[0].ToStdString(), options, argFiles);
 	// frame->SetIcon(wxIcon("icon.ico", wxBITMAP_TYPE_ICO));
 
 	// start new IPC server
@@ -86,14 +125,23 @@ IMPLEMENT_APP_CONSOLE(App);
 IMPLEMENT_APP(App);
 #endif
 
+std::vector<std::string> Connection::filesToBeAdded = std::vector<std::string>();
+
 bool Connection::OnExec(const wxString &topic, const wxString &data) {
-	if (topic.compare("topic") == 0 && data.compare("raise") == 0) {
+	if (topic.compare("raise") == 0 && data.compare("raise") == 0) {
 		((wxFrame *) wxTheApp->GetTopWindow())->Show();
 		((wxFrame *) wxTheApp->GetTopWindow())->Restore();
 		((wxFrame *) wxTheApp->GetTopWindow())->Raise();
 		((wxFrame *) wxTheApp->GetTopWindow())->Show();
 		((wxFrame *) wxTheApp->GetTopWindow())->Restore();
 		((wxFrame *) wxTheApp->GetTopWindow())->Raise();
+	} else if (topic.compare("addToList") == 0) {
+		wxPuts("add" + data);
+		filesToBeAdded.push_back(data.ToStdString());
+	} else if (topic.compare("push") == 0) {
+		wxPuts(std::to_string(filesToBeAdded.size()));
+		((Frame *) wxTheApp->GetTopWindow())->addFontsFromArgs(filesToBeAdded);
+		filesToBeAdded.clear();
 	}
 
 	return true;
