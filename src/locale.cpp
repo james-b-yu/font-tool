@@ -194,10 +194,10 @@
 #define REMOVE_ALL_TOOLTIP "Entlade all der Schriften."
 #define CMD_USAGE "ÜBERSICHT:"
 #define CMD_SYNTAX "[OPTION]... [DATEI]..."
-#define CMD_HELP                                                                                                                \
-	"Ein benutzerfreundlicher portabeler Schriftlader.\n\n-d | --do-not-show | --hidden\n\tZuerst mit einem versteckten "       \
-	"Fenster öffnen. Nutzlich, wenn man einen ruhigen Autostart möchte.\n\n-n | --no-tray\n\tKein Systemfach anzeigen. Dies " \
-	"kann mit -d kombiniert werden, um völlig ruhig zu öffnen.\n\n-s | --supress-updates\n\tAktualisierungssucher "           \
+#define CMD_HELP                                                                                                                 \
+	"Ein benutzerfreundlicher portabeler Schriftlader.\n\n-d | --do-not-show | --hidden\n\tZuerst mit einem versteckten "        \
+	"Fenster öffnen. Nützlich, wenn man einen ruhigen Autostart möchte.\n\n-n | --no-tray\n\tKein Systemfach anzeigen. Dies " \
+	"kann mit -d kombiniert werden, um völlig ruhig zu öffnen.\n\n-s | --supress-updates\n\tAktualisierungssucher "            \
 	"deaktivieren.\n\n-h | --help\n\tDiese Hilfsnachricht anzeigen."
 
 #endif // LANG == 0 || 1
