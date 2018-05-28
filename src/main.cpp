@@ -33,8 +33,9 @@ bool App::OnInit() {
 				                       " " CMD_SYNTAX + "\n" + CMD_HELP + "\n";
 
 				DWORD nw;
-				WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), helpText.c_str(), helpText.length(), &nw, NULL);
-				FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
+				// WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), helpText.c_str(), helpText.length(), &nw, NULL);
+				// FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
+				wxLogMessage("%s", wxString::FromUTF8(helpText.c_str()));
 				return false;
 			} else if (std::regex_match(c.begin(), c.end(),
 			                            std::regex("^-\\w+$"))) { // if a short-hand version of an argument (like -d, -nd, -sn)

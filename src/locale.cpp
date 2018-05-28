@@ -192,14 +192,13 @@
 #define FONT_FILES_BUTTON_TOOLTIP "Füge eine Schriftdatei hinzu."
 #define REMOVE_SELECTED_TOOLTIP "Entlade die ausgewählten Schriften und Ordner"
 #define REMOVE_ALL_TOOLTIP "Entlade all der Schriften."
-#define CMD_USAGE "Usage:"
-#define CMD_SYNTAX "[OPTION]... [FILE]..."
-#define CMD_HELP                                                                                                               \
-	"A very easy-to-use, portable and friendly font loader.\n\n-d | --do-not-show | --hidden\n\tOpen with a "                  \
-	"hidden window. Useful when opening as a start-up executable.\n\n-n | --no-tray\n\tDo not add a system tray icon. This "   \
-	"can be combined with -d for a completely silent background application.\n\n-s | --supress-updates\n\tDisable "            \
-	"updates.\n\n-h | "                                                                                                        \
-	"--help\n\tDisplay this help message."
+#define CMD_USAGE "ÜBERSICHT:"
+#define CMD_SYNTAX "[OPTION]... [DATEI]..."
+#define CMD_HELP                                                                                                                \
+	"Ein benutzerfreundlicher portabeler Schriftlader.\n\n-d | --do-not-show | --hidden\n\tZuerst mit einem versteckten "       \
+	"Fenster öffnen. Nutzlich, wenn man einen ruhigen Autostart möchte.\n\n-n | --no-tray\n\tKein Systemfach anzeigen. Dies " \
+	"kann mit -d kombiniert werden, um völlig ruhig zu öffnen.\n\n-s | --supress-updates\n\tAktualisierungssucher "           \
+	"deaktivieren.\n\n-h | --help\n\tDiese Hilfsnachricht anzeigen."
 
 #endif // LANG == 0 || 1
 
