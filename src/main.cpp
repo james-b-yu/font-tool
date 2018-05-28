@@ -32,7 +32,7 @@ bool App::OnInit() {
 				std::string helpText = CMD_USAGE " " + boost::filesystem::path(argv[0].ToStdString()).filename().string() +
 				                       " " CMD_SYNTAX + "\n" + CMD_HELP + "\n";
 
-				DWORD nw;
+				// DWORD nw;
 				// WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), helpText.c_str(), helpText.length(), &nw, NULL);
 				// FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
 				wxLogMessage("%s", wxString::FromUTF8(helpText.c_str()));

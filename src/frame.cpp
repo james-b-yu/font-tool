@@ -689,7 +689,7 @@ void Frame::addToTree() {
 	}
 
 	tbb::concurrent_vector<TreeItem> newFolders;
-	for (int i = 0; i < folders.size(); i++) {
+	for (size_t i = 0; i < folders.size(); i++) {
 		if (fontTree->GetChildrenCount(folders[i].id) == 0) {
 			fontTree->UnselectItem(folders[i].id);
 			fontTree->Delete(folders[i].id);
