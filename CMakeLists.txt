@@ -21,7 +21,7 @@ include_directories(${CMAKE_SOURCE_DIR})
 link_libraries(debug libcurl_a_debug.lib)
 link_libraries(optimized libcurl_a.lib)
 
-link_libraries(FontTool ${wxWidgets_LIBRARIES})
+link_libraries(${wxWidgets_LIBRARIES})
 
 # setting the language
 OPTION(LANG "Setting the language" 0) # Enabled by default
