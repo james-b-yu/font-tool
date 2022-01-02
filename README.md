@@ -1,5 +1,4 @@
-# AS OF 2021, THIS TOOL IS USELESS! WINDOWS NOW ALLOWS YOU TO INSTALL FONTS ON A USER BASIS.
-This program thus exists as a relic of the lengths went to in order to use beloved fonts.
+As of 2021, this tool is obselete. Windows now allows you to install fonts on a user bases. This program now exists as a relic of the lengths went to in order to use beloved custom fonts on public computers.
 
 # Font Tool
 ## What?
