@@ -68,9 +68,9 @@ Font Tool is not totally independent. As explained in <a href="#how">How?</a>, F
 To get the programme, go to the _releases_ tab in the code view. German versions of the programme are also available.
 
 ## Code
-Font Tool is developed in <a href="https://isocpp.org/">C++</a> and C++ only. It relies on <a href="https://www.wxwidgets.org/">WxWidgets</a> to provide it's GUI, <a href="http://www.boost.org/">boost</a> for high-level filesystem functions, <a href="https://curl.haxx.se/">curl</a> to download updates, and <a href="https://www.threadingbuildingblocks.org/">Intel TBB</a> for concurrent vectors. As you can see, the code virtually crying for optimisation.
+Font Tool is developed in <a href="https://isocpp.org/">C++</a> and C++ only. It relies on <a href="https://www.wxwidgets.org/">WxWidgets</a> to provide it's GUI, <a href="http://www.boost.org/">boost</a> for high-level filesystem functions, <a href="https://curl.haxx.se/">curl</a> to download updates, and <a href="https://www.threadingbuildingblocks.org/">Intel TBB</a> for concurrent vectors.
 
-~~Compilation is through the use of a compile script. It is run in a _bash_ shell and calls the Microsoft Visual C++ Compiler. Inspect the `compile` script and adapt it to explore how to compile it on your machine.~~ Font Tool is now using the *CMake* build system. See <a href="#building">Building</a> to build it from source.
+Font Tool is now using the *CMake* build system. See <a href="#building">Building</a> to build it from source.
 
 The German translation is in broken German. It can be compiled by defining `LANG=1` to the pre-processor. Please see `locale.cpp` to help fix all the errors in translation.
 
