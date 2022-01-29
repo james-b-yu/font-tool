@@ -1,4 +1,4 @@
-As of 2021, this tool is obselete. Windows now allows you to install fonts on a user bases. This program now exists as a relic of the lengths went to in order to use beloved custom fonts on public computers.
+As of 2021, this tool is obselete on personal compueters, since Windows now allows you to install fonts on a user bases. Nevertheless, it remains useful on network computers where rights are restricted under user policy. This program now exists as a relic of the lengths went to in order to use beloved custom fonts on public computers.
 
 # Font Tool
 ## What?
